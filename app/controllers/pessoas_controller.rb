@@ -51,7 +51,7 @@ class PessoasController < ApplicationController
       # render json: { status: 'Create Job enqueued' }, status: :accepted
 
       # Cache the object with the UUID as the key - makes the SHOW request work even before the record is saved in the database
-      Rails.cache.write(@pessoa.id, @pessoa, expires_in: 2.minutes)
+      Rails.cache.write("pessoa/#{@pessoa.id}", @pessoa, expires_in: 2.minutes)
 
       url = url_for(controller: "pessoas", action: "show", id: @pessoa.id)
       render json: { id: @pessoa.id }, status: :created, location: url
@@ -65,7 +65,7 @@ class PessoasController < ApplicationController
     @pessoa = Pessoa.new(pessoa_params)
     if @pessoa.valid?
       # Cache the object with the UUID as the key
-      Rails.cache.write(@pessoa.id, @pessoa, expires_in: 2.minutes)
+      Rails.cache.write("pessoa/#{@pessoa.id}", @pessoa, expires_in: 2.minutes)
 
       # Execute the update action asynchronously
       PessoaJob.perform_async(:update, pessoa_params.merge(id: params[:id]).to_h)
@@ -83,9 +83,10 @@ class PessoasController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_pessoa
-      @pessoa = Pessoa.find(params[:id])
+      @pessoa = Rails.cache.fetch("pessoa/#{params[:id]}", expires_in: 5.minutes) do
+        Pessoa.find(params[:id])
+      end
     end
-
     # Only allow a list of trusted parameters through.
     def pessoa_params
       params.require(:pessoa).permit(:apelido, :nome, :nascimento, stack: [])
