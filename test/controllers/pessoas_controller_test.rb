@@ -8,7 +8,7 @@ class PessoasControllerTest < ActionDispatch::IntegrationTest
 
   test "should get index and return unauthorized" do
     get pessoas_url, as: :json
-    assert_response :unauthorized
+    assert_response :bad_request
   end
 
   test 'should only bring search results' do

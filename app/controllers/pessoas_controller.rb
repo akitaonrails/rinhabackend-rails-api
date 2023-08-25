@@ -17,7 +17,7 @@ class PessoasController < ApplicationController
 
       render json: pessoas
     else
-      render json: { error: 'Unauthorized' }, status: :unauthorized
+      render json: { error: 'Bad Request' }, status: :bad_request
     end
   end
 
