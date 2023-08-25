@@ -1,5 +1,7 @@
 class PessoasController < ApplicationController
-  before_action :set_pessoa, only: %i[ show update destroy ]
+  JSON_FIELDS = %i[id apelido nome nascimento stack].freeze
+
+  before_action :set_pessoa, only: %i[show update destroy]
 
   # GET /pessoas
   def index
@@ -8,12 +10,16 @@ class PessoasController < ApplicationController
     else
       Pessoa.all
     end
-    render json: @pessoas
+    render json: @pessoas, only: JSON_FIELDS
   end
 
   # GET /pessoas/1
   def show
-    render json: @pessoa
+    render json: @pessoa, only: JSON_FIELDS
+  end
+
+  def contagem
+    render plain: Pessoa.count.to_s
   end
 
   # POST /pessoas
@@ -21,7 +27,7 @@ class PessoasController < ApplicationController
     @pessoa = Pessoa.new(pessoa_params)
 
     if @pessoa.save
-      render json: @pessoa, status: :created, location: @pessoa
+      render json: @pessoa, status: :created, location: @pessoa, only: JSON_FIELDS
     else
       render json: @pessoa.errors, status: :unprocessable_entity
     end
@@ -30,7 +36,7 @@ class PessoasController < ApplicationController
   # PATCH/PUT /pessoas/1
   def update
     if @pessoa.update(pessoa_params)
-      render json: @pessoa
+      render json: @pessoa, only: JSON_FIELDS
     else
       render json: @pessoa.errors, status: :unprocessable_entity
     end

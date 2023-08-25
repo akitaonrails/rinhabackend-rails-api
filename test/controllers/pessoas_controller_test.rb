@@ -19,6 +19,13 @@ class PessoasControllerTest < ActionDispatch::IntegrationTest
     assert_includes returned, @pessoa.nome
   end
 
+  test 'should return count of pessoas' do
+    get contagem_pessoas_url, as: :plain
+    assert_response :success
+
+    assert_equal response.body, '2'
+  end
+
   test "should create pessoa" do
     assert_difference("Pessoa.count") do
       post pessoas_url, params: { pessoa: { apelido: 'foo', nascimento: @pessoa.nascimento, nome: 'foo foo', stack: @pessoa.stack } }, as: :json
