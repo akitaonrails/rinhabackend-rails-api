@@ -50,6 +50,9 @@ class PessoasController < ApplicationController
       # the correct way is to send a 202 :accepted status, but sending 201 :created just for the stress test
       # render json: { status: 'Create Job enqueued' }, status: :accepted
 
+      # Cache the object with the UUID as the key - makes the SHOW request work even before the record is saved in the database
+      Rails.cache.write(@pessoa.id, @pessoa, expires_in: 2.minutes)
+
       url = url_for(controller: "pessoas", action: "show", id: @pessoa.id)
       render json: { id: @pessoa.id }, status: :created, location: url
     else
@@ -61,6 +64,9 @@ class PessoasController < ApplicationController
   def update
     @pessoa = Pessoa.new(pessoa_params)
     if @pessoa.valid?
+      # Cache the object with the UUID as the key
+      Rails.cache.write(@pessoa.id, @pessoa, expires_in: 2.minutes)
+
       # Execute the update action asynchronously
       PessoaJob.perform_async(:update, pessoa_params.merge(id: params[:id]).to_h)
       render json: { status: 'Update Job enqueued' }, status: :accepted
