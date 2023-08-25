@@ -1,24 +1,5 @@
-# README
+# TODO: write a proper README later
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Just for the time being:
 
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+    docker run --name rinhabackendpg -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres
