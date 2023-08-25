@@ -28,18 +28,32 @@ class PessoaTest < ActiveSupport::TestCase
     Pessoa.create apelido: 'bar', nome: 'bar bar', nascimento: Date.current, stack: %w[python perl bash]
 
     pessoa = Pessoa.stack_one_of(['python'])
-    assert pessoa.count == 1
-    assert pessoa.first.apelido == 'bar'
+    assert_equal pessoa.count, 1
+    assert_equal pessoa.first.apelido, 'bar'
 
     pessoa = Pessoa.stack_one_of(['ruby'])
-    assert pessoa.count == 1
-    assert pessoa.first.apelido == 'foo'
+    assert_equal pessoa.count,1
+    assert_equal pessoa.first.apelido, 'foo'
 
     pessoa = Pessoa.stack_all_of(%w[python perl])
-    assert pessoa.count == 1
-    assert pessoa.first.apelido == 'bar'
+    assert_equal pessoa.count, 1
+    assert_equal pessoa.first.apelido, 'bar'
 
     pessoa = Pessoa.stack_one_of(['bash'])
-    assert pessoa.count == 2
+    assert_equal pessoa.count, 2
+  end
+
+  test 'search' do
+    one = pessoas(:one)
+    two = pessoas(:two)
+
+    result = Pessoa.search('berto').first
+    assert_equal result.nome, one.nome
+
+    result = Pessoa.search('bosa').first
+    assert_equal result.nome, two.nome
+
+    result = Pessoa.search('Node').first
+    assert_equal result.nome, one.nome
   end
 end

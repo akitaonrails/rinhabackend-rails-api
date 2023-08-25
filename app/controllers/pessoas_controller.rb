@@ -3,8 +3,11 @@ class PessoasController < ApplicationController
 
   # GET /pessoas
   def index
-    @pessoas = Pessoa.all
-
+    @pessoas = if params[:t]
+      Pessoa.search(params[:t])
+    else
+      Pessoa.all
+    end
     render json: @pessoas
   end
 

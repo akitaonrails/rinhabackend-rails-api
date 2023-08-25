@@ -10,8 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_08_25_134432) do
+ActiveRecord::Schema[7.0].define(version: 2023_08_25_151541) do
   # These are extensions that must be enabled in order to support this database
+  enable_extension "pg_trgm"
   enable_extension "plpgsql"
 
   create_table "pessoas", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -24,6 +25,15 @@ ActiveRecord::Schema[7.0].define(version: 2023_08_25_134432) do
     t.index ["apelido"], name: "index_pessoas_on_apelido", unique: true
     t.index ["nome"], name: "index_pessoas_on_nome", unique: true
     t.index ["stack"], name: "index_pessoas_on_stack", using: :gin
+  end
+
+  create_table "pg_search_documents", force: :cascade do |t|
+    t.text "content"
+    t.string "searchable_type"
+    t.bigint "searchable_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["searchable_type", "searchable_id"], name: "index_pg_search_documents_on_searchable"
   end
 
 end

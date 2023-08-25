@@ -3,11 +3,20 @@ require "test_helper"
 class PessoasControllerTest < ActionDispatch::IntegrationTest
   setup do
     @pessoa = pessoas(:one)
+    @pessoa_two = pessoas(:two)
   end
 
   test "should get index" do
     get pessoas_url, as: :json
     assert_response :success
+  end
+
+  test 'should only bring search results' do
+    get pessoas_url(t: 'berto'), as: :json
+    assert_response :success
+
+    returned = JSON.parse(response.body).map { |pessoa| pessoa['nome'] }
+    assert_includes returned, @pessoa.nome
   end
 
   test "should create pessoa" do
