@@ -2,6 +2,7 @@ class PessoasController < ApplicationController
   JSON_FIELDS = %i[id apelido nome nascimento stack].freeze
 
   before_action :set_pessoa, only: %i[show update destroy]
+  before_action :validate_params, only: %i[create update]
 
   # GET /pessoas
   def index
@@ -54,6 +55,20 @@ class PessoasController < ApplicationController
 
     # Only allow a list of trusted parameters through.
     def pessoa_params
-      params.require(:pessoa).permit(:apelido, :nome, :nascimento, :stack)
+      params.require(:pessoa).permit(:apelido, :nome, :nascimento, stack: [])
+    end
+
+    def validate_params
+      p = pessoa_params
+
+      unless p[:apelido].is_a?(String) && p[:nome].is_a?(String)
+        render json: { error: 'Apelido and Nome must be strings' }, status: :bad_request
+        return
+      end
+
+      unless p[:stack].all? { |elem| elem.is_a?(String) }
+        render json: { error: 'Stack must be an array of strings' }, status: :bad_request
+        return
+      end
     end
 end

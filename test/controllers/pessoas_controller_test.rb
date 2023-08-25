@@ -34,6 +34,25 @@ class PessoasControllerTest < ActionDispatch::IntegrationTest
     assert_response :created
   end
 
+  test "should not allow apelido not being a string" do
+    post pessoas_url, params: { pessoa: { apelido: 1, nascimento: @pessoa.nascimento, nome: 'foo foo', stack: @pessoa.stack } }, as: :json
+
+    assert_response :bad_request
+  end
+
+  test "should not allow nome not being a string" do
+    post pessoas_url, params: { pessoa: { apelido: 'foo', nascimento: @pessoa.nascimento, nome: 2, stack: @pessoa.stack } }, as: :json
+
+    assert_response :bad_request
+  end
+
+  test "should not allow stack having element not being a string" do
+    post pessoas_url, params: { pessoa: { apelido: 'foo', nascimento: @pessoa.nascimento, nome: 'foo foo',
+                                stack: ['ruby', 3] } }, as: :json
+
+    assert_response :bad_request
+  end
+
   test "should show pessoa" do
     get pessoa_url(@pessoa), as: :json
     assert_response :success
