@@ -5,12 +5,11 @@ class PessoasController < ApplicationController
 
   # GET /pessoas
   def index
-    @pessoas = if params[:t]
-      Pessoa.search(params[:t])
+    if params[:t]
+      render json: Pessoa.search(params[:t]), only: JSON_FIELDS
     else
-      Pessoa.all
+      render json: { error: 'Unauthorized' }, status: :unauthorized
     end
-    render json: @pessoas, only: JSON_FIELDS
   end
 
   # GET /pessoas/1

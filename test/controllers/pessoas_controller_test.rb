@@ -6,16 +6,16 @@ class PessoasControllerTest < ActionDispatch::IntegrationTest
     @pessoa_two = pessoas(:two)
   end
 
-  test "should get index" do
+  test "should get index and return unauthorized" do
     get pessoas_url, as: :json
-    assert_response :success
+    assert_response :unauthorized
   end
 
   test 'should only bring search results' do
     get pessoas_url(t: 'berto'), as: :json
     assert_response :success
 
-    returned = JSON.parse(response.body).map { |pessoa| pessoa['nome'] }
+    returned = JSON.parse(response.body)&.map { |pessoa| pessoa['nome'] }
     assert_includes returned, @pessoa.nome
   end
 
