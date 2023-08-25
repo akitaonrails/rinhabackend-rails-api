@@ -4,9 +4,11 @@ services:
     image: docker.io/akitaonrails/rinhabackendapi
     environment:
       DB_HOST: db
+      DB_POOL: 10
     hostname: api1
     depends_on:
       - db
+      - memcached
     expose:
       - "3000"
     deploy:
@@ -19,9 +21,11 @@ services:
     image: docker.io/akitaonrails/rinhabackendapi
     environment:
       DB_HOST: db
+      DB_POOL: 10
     hostname: api2
     depends_on:
       - db
+      - memcached
     expose:
       - "3000"
     deploy:
@@ -43,17 +47,25 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: '0.20'
           memory: '0.5GB'
 
   db: # Banco de dados
    image: docker.io/postgres
    environment:
      POSTGRES_PASSWORD: password
-     POSTGRES_SHARED_BUFFERS: '128MB'
-     POSTGRES_MAX_CONNECTIONS: '20'
    deploy:
       resources:
         limits:
-          cpus: '0.75'
-          memory: '1.5GB'
+          cpus: '0.70'
+          memory: '1.3GB'
+
+  memcached:
+    image: memcached:latest
+    ports:
+      - "11211:11211"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: '0.2GB'

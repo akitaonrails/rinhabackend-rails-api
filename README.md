@@ -13,7 +13,34 @@ Application should respond at:
 
     http://0.0.0.0:9999
 
-On AWS EC2, create a t2.medium instance (2vCPUs 4GB RAM), ssh in and:
+
+Run stress test:
+
+    wget https://repo1.maven.org/maven2/io/gatling/highcharts/gatling-charts-highcharts-bundle/3.9.5/gatling-charts-highcharts-bundle-3.9.5-bundle.zip
+    unzip gatling-charts-highcharts-bundle-3.9.5-bundle.zip
+    sudo mv gatling-charts-highcharts-bundle-3.9.5-bundle /opt
+    sudo ln -s /opt/gatling-charts-highcharts-bundle-3.9.5-bundle /opt/gatling
+
+    cd ..
+    git clone https://github.com/zanfranceschi/rinha-de-backend-2023-q3.git
+    cd rinha-de-backend-2023-q3/stress-test
+
+Edit the stress-test run-test.sh variables accordingly:
+
+    GATLING_BIN_DIR=/opt/gatling/bin
+
+    WORKSPACE=$HOME/Projects/rinha-de-backend-2023-q3/stress-test
+
+Run the stress test:
+
+    ./run-test.sh # after docker-compose up
+
+On AWS EC2, create a t2.medium instance (2vCPUs 4GB RAM), download the .pem key:
+
+    chmod 400 yourkey.pem
+    ssh -i yourkey.pem -o IdentitiesOnly=yes ec2-user@yourinstanceaddress.com
+
+SSH in:
 
     # Install Docker
     sudo amazon-linux-extras install docker
@@ -31,7 +58,9 @@ On AWS EC2, create a t2.medium instance (2vCPUs 4GB RAM), ssh in and:
 
     # run docker compose
     cd rinhabackend-rails-api
-    docker-compose up
+    docker-compose up -d
+    docker-compose exec api1 rails db:create
+    docker-compose exec api1 rails db:migrate
 
 Challenge description:
 

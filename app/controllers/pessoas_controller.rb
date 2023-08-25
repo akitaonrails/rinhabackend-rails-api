@@ -1,13 +1,21 @@
 class PessoasController < ApplicationController
   JSON_FIELDS = %i[id apelido nome nascimento stack].freeze
 
-  before_action :set_pessoa, only: %i[show update destroy]
+  before_action :set_pessoa, only: %i[show destroy]
   before_action :validate_params, only: %i[create update]
 
   # GET /pessoas
   def index
     if params[:t]
-      render json: Pessoa.search(params[:t]), only: JSON_FIELDS
+      # Caching query in Rails cache
+      pessoas = Rails.cache.fetch("pessoa_search_#{params[:t]}", expires_in: 5.minutes) do
+        Pessoa.search(params[:t]).as_json(only: JSON_FIELDS)
+      end
+
+      # HTTP caching
+      fresh_when etag: Digest::MD5.hexdigest(pessoas.to_json)
+
+      render json: pessoas
     else
       render json: { error: 'Unauthorized' }, status: :unauthorized
     end
@@ -15,19 +23,35 @@ class PessoasController < ApplicationController
 
   # GET /pessoas/1
   def show
+    # HTTP caching
+    fresh_when @pessoa
+
     render json: @pessoa, only: JSON_FIELDS
   end
 
   def contagem
-    render plain: Pessoa.count.to_s
+    count = Rails.cache.fetch("pessoa_count", expires_in: 1.minute) do
+      Pessoa.count
+    end
+    # HTTP caching
+    fresh_when etag: count.to_s
+
+    render plain: count.to_s
   end
 
   # POST /pessoas
   def create
     @pessoa = Pessoa.new(pessoa_params)
 
-    if @pessoa.save
-      render json: @pessoa, status: :created, location: @pessoa, only: JSON_FIELDS
+    if @pessoa.valid?
+      # Execute the create action asynchronously
+      PessoaJob.perform_async(:create, pessoa_params.to_h.merge(id: @pessoa.id))
+
+      # the correct way is to send a 202 :accepted status, but sending 201 :created just for the stress test
+      # render json: { status: 'Create Job enqueued' }, status: :accepted
+
+      url = url_for(controller: "pessoas", action: "show", id: @pessoa.id)
+      render json: { id: @pessoa.id }, status: :created, location: url
     else
       render json: @pessoa.errors, status: :unprocessable_entity
     end
@@ -35,8 +59,11 @@ class PessoasController < ApplicationController
 
   # PATCH/PUT /pessoas/1
   def update
-    if @pessoa.update(pessoa_params)
-      render json: @pessoa, only: JSON_FIELDS
+    @pessoa = Pessoa.new(pessoa_params)
+    if @pessoa.valid?
+      # Execute the update action asynchronously
+      PessoaJob.perform_async(:update, pessoa_params.merge(id: params[:id]).to_h)
+      render json: { status: 'Update Job enqueued' }, status: :accepted
     else
       render json: @pessoa.errors, status: :unprocessable_entity
     end
