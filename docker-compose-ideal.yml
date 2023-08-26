@@ -1,6 +1,6 @@
 version: '3.5'
 services:
-  api1: # API - Instância 01
+  api1: &api
     #image: docker.io/akitaonrails/rinhabackendapi:latest
     build: ./
     environment:
@@ -27,194 +27,33 @@ services:
           cpus: '1.5'
           memory: '1.5GB'
 
-  api2: # API - Instância 02
-    #image: docker.io/akitaonrails/rinhabackendapi:latest
-    build: ./
-    environment:
-      DB_HOST: db
-      DB_POOL: 25
-      RAILS_MAX_THREADS: 5
-      WEB_CONCURRENCY: 4
-      SUCKER_PUNCH_WORKERS: 2
-      CACHE_EXPIRES_SECONDS: 90
+  api2:
+    <<: *api
     hostname: api2
-    depends_on:
-      - db
-      - memcached
-    expose:
-      - "3000"
-    ulimits:
-      nproc: 1000000
-      nofile:
-        soft: 1000000
-        hard: 1000000
-    deploy:
-      resources:
-        limits:
-          cpus: '1.5'
-          memory: '1.5GB'
 
-  api3: # API - Instância 03
-    #image: docker.io/akitaonrails/rinhabackendapi:latest
-    build: ./
-    environment:
-      DB_HOST: db
-      DB_POOL: 25
-      RAILS_MAX_THREADS: 5
-      WEB_CONCURRENCY: 4
-      SUCKER_PUNCH_WORKERS: 2
-      CACHE_EXPIRES_SECONDS: 90
+  api3:
+    <<: *api
     hostname: api3
-    depends_on:
-      - db
-      - memcached
-    expose:
-      - "3000"
-    ulimits:
-      nproc: 1000000
-      nofile:
-        soft: 1000000
-        hard: 1000000
-    deploy:
-      resources:
-        limits:
-          cpus: '1.5'
-          memory: '1.5GB'
 
-  api4: # API - Instância 04
-    #image: docker.io/akitaonrails/rinhabackendapi:latest
-    build: ./
-    environment:
-      DB_HOST: db
-      DB_POOL: 25
-      RAILS_MAX_THREADS: 5
-      WEB_CONCURRENCY: 4
-      SUCKER_PUNCH_WORKERS: 2
-      CACHE_EXPIRES_SECONDS: 90
+  api4:
+    <<: *api
     hostname: api4
-    depends_on:
-      - db
-      - memcached
-    expose:
-      - "3000"
-    ulimits:
-      nproc: 1000000
-      nofile:
-        soft: 1000000
-        hard: 1000000
-    deploy:
-      resources:
-        limits:
-          cpus: '1.5'
-          memory: '1.5GB'
 
-  api5: # API - Instância 05
-    #image: docker.io/akitaonrails/rinhabackendapi:latest
-    build: ./
-    environment:
-      DB_HOST: db
-      DB_POOL: 25
-      RAILS_MAX_THREADS: 5
-      WEB_CONCURRENCY: 4
-      SUCKER_PUNCH_WORKERS: 2
-      CACHE_EXPIRES_SECONDS: 90
+  api5:
+    <<: *api
     hostname: api5
-    depends_on:
-      - db
-      - memcached
-    expose:
-      - "3000"
-    ulimits:
-      nproc: 1000000
-      nofile:
-        soft: 1000000
-        hard: 1000000
-    deploy:
-      resources:
-        limits:
-          cpus: '1.5'
-          memory: '1.5GB'
 
-  api6: # API - Instância 06
-    #image: docker.io/akitaonrails/rinhabackendapi:latest
-    build: ./
-    environment:
-      DB_HOST: db
-      DB_POOL: 25
-      RAILS_MAX_THREADS: 5
-      WEB_CONCURRENCY: 4
-      SUCKER_PUNCH_WORKERS: 2
-      CACHE_EXPIRES_SECONDS: 90
+  api6:
+    <<: *api
     hostname: api6
-    depends_on:
-      - db
-      - memcached
-    expose:
-      - "3000"
-    ulimits:
-      nproc: 1000000
-      nofile:
-        soft: 1000000
-        hard: 1000000
-    deploy:
-      resources:
-        limits:
-          cpus: '1.5'
-          memory: '1.5GB'
 
-  api7: # API - Instância 07
-    #image: docker.io/akitaonrails/rinhabackendapi:latest
-    build: ./
-    environment:
-      DB_HOST: db
-      DB_POOL: 25
-      RAILS_MAX_THREADS: 5
-      WEB_CONCURRENCY: 4
-      SUCKER_PUNCH_WORKERS: 2
-      CACHE_EXPIRES_SECONDS: 90
+  api7:
+    <<: *api
     hostname: api7
-    depends_on:
-      - db
-      - memcached
-    expose:
-      - "3000"
-    ulimits:
-      nproc: 1000000
-      nofile:
-        soft: 1000000
-        hard: 1000000
-    deploy:
-      resources:
-        limits:
-          cpus: '1.5'
-          memory: '1.5GB'
 
-  api8: # API - Instância 08
-    #image: docker.io/akitaonrails/rinhabackendapi:latest
-    build: ./
-    environment:
-      DB_HOST: db
-      DB_POOL: 25
-      RAILS_MAX_THREADS: 5
-      WEB_CONCURRENCY: 4
-      SUCKER_PUNCH_WORKERS: 2
-      CACHE_EXPIRES_SECONDS: 90
+  api8:
+    <<: *api
     hostname: api8
-    depends_on:
-      - db
-      - memcached
-    expose:
-      - "3000"
-    ulimits:
-      nproc: 1000000
-      nofile:
-        soft: 1000000
-        hard: 1000000
-    deploy:
-      resources:
-        limits:
-          cpus: '1.5'
-          memory: '1.5GB'
 
   nginx: # Load Balancer
     image: docker.io/nginx:latest
