@@ -10,7 +10,7 @@ ENV RAILS_LOG_TO_STDOUT=true
 ENV RAILS_SERVE_STATIC_FILES=true
 
 # Install nodejs and yarn
-RUN apt-get update -qq && apt-get install -y nodejs npm && npm install -g yarn
+RUN apt-get update -qq #&& apt-get install -y nodejs npm && npm install -g yarn
 
 # Install PostgreSQL client
 RUN apt-get install -y postgresql-client
@@ -19,7 +19,9 @@ RUN apt-get install -y postgresql-client
 COPY Gemfile* ./
 
 # Install gems
-RUN bundle install --without development test --jobs 4 --retry 3
+RUN gem install bundler
+RUN bundle config set --local without 'development test'
+RUN bundle install --jobs 4 --retry 3
 
 # Copy the current directory contents into the container at /app
 COPY . .
@@ -31,4 +33,4 @@ COPY . .
 EXPOSE 3000
 
 # Start the main process
-CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0", "-u", "puma"]
+CMD ["sh", "./entrypoint.sh"]

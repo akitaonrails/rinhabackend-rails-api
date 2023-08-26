@@ -1,11 +1,13 @@
 version: '3.5'
 services:
   api1: # API - Instância 01
-    image: docker.io/akitaonrails/rinhabackendapi:latest
+    #image: docker.io/akitaonrails/rinhabackendapi:latest
+    build: ./
     environment:
       DB_HOST: db
-      DB_POOL: 30
-      RAILS_MAX_THREADS: 25
+      DB_POOL: 60
+      RAILS_MAX_THREADS: 10
+      WEB_CONCURRENCY: 5
     hostname: api1
     depends_on:
       - db
@@ -20,15 +22,17 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.35'
-          memory: '0.7GB'
+          cpus: '0.40'
+          memory: '0.8GB'
 
-  api2: # API - Instância 01
-    image: docker.io/akitaonrails/rinhabackendapi:latest
+  api2: # API - Instância 02
+    #image: docker.io/akitaonrails/rinhabackendapi:latest
+    build: ./
     environment:
       DB_HOST: db
-      DB_POOL: 30
-      RAILS_MAX_THREADS: 25
+      DB_POOL: 60
+      RAILS_MAX_THREADS: 10
+      WEB_CONCURRENCY: 5
     hostname: api2
     depends_on:
       - db
@@ -43,8 +47,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.35'
-          memory: '0.7GB'
+          cpus: '0.40'
+          memory: '0.8GB'
 
   nginx: # Load Balancer
     image: docker.io/nginx:latest
@@ -64,13 +68,15 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.20'
-          memory: '0.5GB'
+          cpus: '0.10'
+          memory: '0.3GB'
 
   db: # Banco de dados
     image: docker.io/postgres
     environment:
       POSTGRES_PASSWORD: password
+    volumes:
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 5s
