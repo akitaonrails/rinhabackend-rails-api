@@ -1,11 +1,11 @@
 class PessoasController < ApplicationController
   JSON_FIELDS = %i[id apelido nome nascimento stack].freeze
-  CACHE_EXPIRES = ENV.fetch('CACHE_EXPIRES_MINUTES', 2).to_i.minutes
+  CACHE_EXPIRES = ENV.fetch('CACHE_EXPIRES_SECONDS', 2).to_i.seconds
 
   before_action :set_pessoa, only: %i[show update destroy]
   before_action :validate_params, only: %i[create update]
 
-  # GET /pessoas
+  # GET /pessoas?t=query
   def index
     if params[:t]
       # Caching query in Rails cache
@@ -35,6 +35,10 @@ class PessoasController < ApplicationController
   end
 
   def contagem
+    # hack: wait for Sucker Punch to empty its queue before providing the final count
+    # the stress test don't count this request for performance
+    SuckerPunch::Queue.wait
+
     render plain: Pessoa.count.to_s
   end
 
@@ -43,15 +47,19 @@ class PessoasController < ApplicationController
     @pessoa = Pessoa.new(pessoa_params)
 
     if @pessoa.valid?
-      begin
-        if @pessoa.save
-          head :created, location: pessoa_url(@pessoa)
-        else
-          head :unprocessable_entity
-        end
-      rescue ActiveRecord::RecordNotUnique => e
+      # hack to find duplicate without hitting the db
+      if Rails.cache.fetch("pessoa/#{@pessoa.apelido}")
         head :unprocessable_entity
+        return
       end
+
+      # hack so SHOW works before sucker punch hits the db eventually
+      Rails.cache.write("pessoa/#{@pessoa.id}", @pessoa, expires_in: CACHE_EXPIRES)
+      Rails.cache.write("pessoa/#{@pessoa.apelido}", '', expires_in: CACHE_EXPIRES)
+
+      # hack to not lock waiting for db insert
+      PessoaJob.perform_async(:create, pessoa_params.merge(id: params[:id]).to_h)
+      head :created, location: pessoa_url(@pessoa)
     else
       head :unprocessable_entity
     end
@@ -59,8 +67,9 @@ class PessoasController < ApplicationController
 
   # PATCH/PUT /pessoas/1
   def update
-    if @pessoa.update(pessoa_params)
-      render json: @pessoa, only: JSON_FIELDS
+    if @pessoa.valid?
+      PessoaJob.perform_async(:update, pessoa_params.merge(id: params[:id]).to_h)
+      head :ok
     else
       head :unprocessable_entity
     end

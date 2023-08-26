@@ -6,8 +6,8 @@ WORKDIR /app
 
 # Set environment variables
 ENV RAILS_ENV=production
-ENV RAILS_LOG_TO_STDOUT=true
-ENV RAILS_SERVE_STATIC_FILES=true
+ENV RAILS_LOG_TO_STDOUT=false
+ENV RAILS_SERVE_STATIC_FILES=false
 
 # Install nodejs and yarn
 RUN apt-get update -qq #&& apt-get install -y nodejs npm && npm install -g yarn

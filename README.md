@@ -58,10 +58,10 @@ SSH in:
 
     # run docker compose
     cd rinhabackend-rails-api
-    docker-compose up -d
-    docker-compose exec api1 rails db:create
-    docker-compose exec api1 rails db:migrate
+    docker-compose up --force-recreate -d
 
-Challenge description:
+Challenge [INSTRUCTIONS](https://github.com/zanfranceschi/rinha-de-backend-2023-q3/blob/main/INSTRUCOES.md):
 
-    https://github.com/zanfranceschi/rinha-de-backend-2023-q3/blob/main/INSTRUCOES.md
+Challenge [STRESS TEST](https://github.com/zanfranceschi/rinha-de-backend-2023-q3/blob/main/stress-test/run-test.sh)
+
+Don't forget to change run-test.sh and RinhaBackendSimulation.scala to add your own PATH and HOST name (in case you're running on AWS EC2). Also don't forget to edit docker-compose.yml to not build locally, but fetch the image from docker.io.
