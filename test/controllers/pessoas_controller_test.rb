@@ -2,6 +2,7 @@ require "test_helper"
 
 class PessoasControllerTest < ActionDispatch::IntegrationTest
   setup do
+    Rails.cache.clear
     @pessoa = pessoas(:one)
     @pessoa_two = pessoas(:two)
   end
@@ -53,9 +54,24 @@ class PessoasControllerTest < ActionDispatch::IntegrationTest
     assert_response :bad_request
   end
 
+  test "should not allow duplicate pessoa" do
+    post pessoas_url, params: { pessoa: { apelido: @pessoa.apelido, nascimento: @pessoa.nascimento, nome: @pessoa.nome,
+                                stack: @pessoa.stack } }, as: :json
+    assert_response :created
+
+    post pessoas_url, params: { pessoa: { apelido: @pessoa.apelido, nascimento: @pessoa.nascimento, nome: @pessoa.nome,
+                                stack: @pessoa.stack } }, as: :json
+    assert_response :unprocessable_entity
+  end
+
   test "should show pessoa" do
     get pessoa_url(@pessoa), as: :json
     assert_response :success
+  end
+
+  test "should return not found pessoa" do
+    get pessoa_url("unknown"), as: :json
+    assert_response :not_found
   end
 
   test "should update pessoa" do
