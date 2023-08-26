@@ -1,5 +1,17 @@
 # Rinha Backend - API
 
+This project was inspired by a community driven challenge that ran on August 2023:
+
+Challenge [INSTRUCTIONS](https://github.com/zanfranceschi/rinha-de-backend-2023-q3/blob/main/INSTRUCOES.md):
+
+Challenge [STRESS TEST](https://github.com/zanfranceschi/rinha-de-backend-2023-q3/blob/main/stress-test/run-test.sh)
+
+Unfortunatelly I only heard about it a few days after it was closed, but I decided to try it out here.
+
+The API itself is not the challenge, but to make it fit within the confines of a measle 1.5 vCPU and 3GB of RAM, and endure a very heavy, almost DDoS-like Gatling stress test. It's brutal test.
+
+The goal of this version was to make a fully Rails API based app, with enough speed optimizations without completely breaking the framework. Some tricks are not recommended for real production usage, but it leverages the fact that this is a performance oriented challenge.
+
 To run this application:
 
     docker-compose up
@@ -60,8 +72,8 @@ SSH in:
     cd rinhabackend-rails-api
     docker-compose up --force-recreate -d
 
-Challenge [INSTRUCTIONS](https://github.com/zanfranceschi/rinha-de-backend-2023-q3/blob/main/INSTRUCOES.md):
-
-Challenge [STRESS TEST](https://github.com/zanfranceschi/rinha-de-backend-2023-q3/blob/main/stress-test/run-test.sh)
-
 Don't forget to change run-test.sh and RinhaBackendSimulation.scala to add your own PATH and HOST name (in case you're running on AWS EC2). Also don't forget to edit docker-compose.yml to not build locally, but fetch the image from docker.io.
+
+And in case you're wondering how a more "realistic" setup would look like, I created a "docker-compose-ideal.yml" that breaks the 1.5 vCPU and 3GB of RAM to a whopping 24 vCPUs and 20GB of RAM. If you have the horsepower for that, run:
+
+    docker-compose -f docker-compose-ideal.yml up --force-recreate --build
