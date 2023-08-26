@@ -58,7 +58,7 @@ class PessoasController < ApplicationController
       Rails.cache.write("pessoa/#{@pessoa.apelido}", '', expires_in: CACHE_EXPIRES)
 
       # hack to not lock waiting for db insert
-      PessoaJob.perform_async(:create, pessoa_params.merge(id: params[:id]).to_h)
+      PessoaJob.perform_async(:create, pessoa_params.merge(id: @pessoa.id).to_h)
       head :created, location: pessoa_url(@pessoa)
     else
       head :unprocessable_entity

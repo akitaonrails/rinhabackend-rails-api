@@ -9,6 +9,8 @@ services:
       RAILS_MAX_THREADS: 5
       WEB_CONCURRENCY: 4
       SUCKER_PUNCH_WORKERS: 2
+      SUCKER_PUNCH_BATCH_SIZE: 5
+      SUCKER_PUNCH_FLUSH_TIMEOUT: 30
       CACHE_EXPIRES_SECONDS: 70
     hostname: api1
     depends_on:
@@ -24,7 +26,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.35'
+          cpus: '0.4'
           memory: '0.95GB'
 
   api2:
@@ -73,7 +75,7 @@ services:
       resources:
         limits:
           cpus: '0.50'
-          memory: '0.50GB'
+          memory: '0.70GB'
 
   memcached:
     image: memcached:latest
@@ -82,5 +84,5 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.20'
-          memory: '0.40GB'
+          cpus: '0.10'
+          memory: '0.20GB'

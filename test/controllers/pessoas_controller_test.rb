@@ -28,9 +28,10 @@ class PessoasControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should create pessoa" do
-    assert_difference("Pessoa.count") do
+    # can't assert difference because it's async
+    #assert_difference("Pessoa.count") do
       post pessoas_url, params: { pessoa: { apelido: 'foo', nascimento: @pessoa.nascimento, nome: 'foo foo', stack: @pessoa.stack } }, as: :json
-    end
+    #end
 
     assert_response :created
   end
