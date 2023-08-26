@@ -4,8 +4,8 @@ services:
     image: docker.io/akitaonrails/rinhabackendapi:latest
     environment:
       DB_HOST: db
-      DB_POOL: 25
-      RAILS_MAX_THREADS: 20
+      DB_POOL: 30
+      RAILS_MAX_THREADS: 25
     hostname: api1
     depends_on:
       - db
@@ -20,15 +20,15 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
-          memory: '0.6GB'
+          cpus: '0.35'
+          memory: '0.7GB'
 
   api2: # API - Instância 01
     image: docker.io/akitaonrails/rinhabackendapi:latest
     environment:
       DB_HOST: db
-      DB_POOL: 25
-      RAILS_MAX_THREADS: 20
+      DB_POOL: 30
+      RAILS_MAX_THREADS: 25
     hostname: api2
     depends_on:
       - db
@@ -43,8 +43,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
-          memory: '0.6GB'
+          cpus: '0.35'
+          memory: '0.7GB'
 
   nginx: # Load Balancer
     image: docker.io/nginx:latest
@@ -85,8 +85,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.70'
-          memory: '1GB'
+          cpus: '0.50'
+          memory: '0.8GB'
 
   memcached:
     image: memcached:latest
