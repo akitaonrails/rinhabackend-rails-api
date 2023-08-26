@@ -18,7 +18,7 @@ class PessoasController < ApplicationController
 
       render json: pessoas
     else
-      render json: { error: 'Bad Request' }, status: :bad_request
+      head :bad_request
     end
   end
 
@@ -45,15 +45,15 @@ class PessoasController < ApplicationController
     if @pessoa.valid?
       begin
         if @pessoa.save
-          render json: @pessoa, status: :created, location: @pessoa, only: JSON_FIELDS
+          head :created, location: pessoa_url(@pessoa)
         else
-          render json: @pessoa.errors, status: :unprocessable_entity
+          head :unprocessable_entity
         end
       rescue ActiveRecord::RecordNotUnique => e
-        render json: { error: 'Record already exists', details: e.message }, status: :unprocessable_entity
+        head :unprocessable_entity
       end
     else
-      render json: @pessoa.errors, status: :unprocessable_entity
+      head :unprocessable_entity
     end
   end
 
@@ -62,7 +62,7 @@ class PessoasController < ApplicationController
     if @pessoa.update(pessoa_params)
       render json: @pessoa, only: JSON_FIELDS
     else
-      render json: @pessoa.errors, status: :unprocessable_entity
+      head :unprocessable_entity
     end
   end
 
@@ -88,12 +88,12 @@ class PessoasController < ApplicationController
       p = pessoa_params
 
       unless p[:apelido].is_a?(String) && p[:nome].is_a?(String)
-        render json: { error: 'Apelido and Nome must be strings' }, status: :bad_request
+        head :bad_request
         return
       end
 
       unless p[:stack].all? { |elem| elem.is_a?(String) }
-        render json: { error: 'Stack must be an array of strings' }, status: :bad_request
+        head :bad_request
         return
       end
     end
