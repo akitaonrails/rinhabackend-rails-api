@@ -2,7 +2,7 @@ class PessoasController < ApplicationController
   JSON_FIELDS = %i[id apelido nome nascimento stack].freeze
   CACHE_EXPIRES = ENV.fetch('CACHE_EXPIRES_MINUTES', 2).to_i.minutes
 
-  before_action :set_pessoa, only: %i[show destroy]
+  before_action :set_pessoa, only: %i[show update destroy]
   before_action :validate_params, only: %i[create update]
 
   # GET /pessoas
@@ -35,13 +35,7 @@ class PessoasController < ApplicationController
   end
 
   def contagem
-    count = Rails.cache.fetch("pessoa_count", expires_in: CACHE_EXPIRES) do
-      Pessoa.count
-    end
-    # HTTP caching
-    fresh_when etag: count.to_s
-
-    render plain: count.to_s
+    render plain: Pessoa.count.to_s
   end
 
   # POST /pessoas
@@ -49,20 +43,15 @@ class PessoasController < ApplicationController
     @pessoa = Pessoa.new(pessoa_params)
 
     if @pessoa.valid?
-      if Rails.cache.fetch("pessoa/#{@pessoa.apelido}")
-        render json: { error: { apelido: 'already exists' } }, status: :unprocessable_entity
-        return
+      begin
+        if @pessoa.save
+          render json: @pessoa, status: :created, location: @pessoa, only: JSON_FIELDS
+        else
+          render json: @pessoa.errors, status: :unprocessable_entity
+        end
+      rescue ActiveRecord::RecordNotUnique => e
+        render json: { error: 'Record already exists', details: e.message }, status: :unprocessable_entity
       end
-
-      write_cache(@pessoa)
-
-      # Execute the create action asynchronously
-      PessoaJob.perform_async(:create, pessoa_params.to_h.merge(id: @pessoa.id))
-
-      # the correct way is to send a 202 :accepted status, but sending 201 :created just for the stress test
-      # render json: { status: 'Create Job enqueued' }, status: :accepted
-      url = url_for(controller: "pessoas", action: "show", id: @pessoa.id)
-      render json: { id: @pessoa.id }, status: :created, location: url
     else
       render json: @pessoa.errors, status: :unprocessable_entity
     end
@@ -70,14 +59,8 @@ class PessoasController < ApplicationController
 
   # PATCH/PUT /pessoas/1
   def update
-    @pessoa = Pessoa.new(pessoa_params)
-    if @pessoa.valid?
-      # Cache the object with the UUID as the key
-      Rails.cache.write("pessoa/#{@pessoa.id}", @pessoa, expires_in: CACHE_EXPIRES)
-
-      # Execute the update action asynchronously
-      PessoaJob.perform_async(:update, pessoa_params.merge(id: params[:id]).to_h)
-      render json: { status: 'Update Job enqueued' }, status: :accepted
+    if @pessoa.update(pessoa_params)
+      render json: @pessoa, only: JSON_FIELDS
     else
       render json: @pessoa.errors, status: :unprocessable_entity
     end
@@ -89,13 +72,6 @@ class PessoasController < ApplicationController
   end
 
   private
-    def write_cache(pessoa)
-      # Cache the object with the UUID as the key - makes the SHOW request work even before the record is saved in the database
-      Rails.cache.write("pessoa/#{pessoa.id}", pessoa, expires_in: CACHE_EXPIRES)
-      # this is here just to check uniqueness without hitting the database
-      Rails.cache.write("pessoa/#{pessoa.apelido}", '', expires_in: CACHE_EXPIRES)
-    end
-
     # Use callbacks to share common setup or constraints between actions.
     def set_pessoa
       @pessoa = Rails.cache.fetch("pessoa/#{params[:id]}", expires_in: CACHE_EXPIRES) do

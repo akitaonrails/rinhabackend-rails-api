@@ -150,8 +150,6 @@ GEM
     rake (13.0.6)
     reline (0.3.8)
       io-console (~> 0.5)
-    sucker_punch (3.1.0)
-      concurrent-ruby (~> 1.0)
     thor (1.2.2)
     timeout (0.4.0)
     tzinfo (2.0.6)
@@ -172,7 +170,6 @@ DEPENDENCIES
   pg_search
   puma (~> 5.0)
   rails (~> 7.0.7, >= 7.0.7.2)
-  sucker_punch
   tzinfo-data
 
 RUBY VERSION

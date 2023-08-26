@@ -6,7 +6,7 @@
 #
 default: &default
   adapter: postgresql
-  pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+  pool: <%= ENV.fetch("DB_POOL", 5) %>
   host: <%= ENV.fetch("DB_HOST", 'localhost') %>
   username: <%= ENV.fetch("DB_USERNAME", 'postgres') %>
   password: <%= ENV.fetch("DB_PASSWORD", 'password') %>

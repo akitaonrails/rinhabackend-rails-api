@@ -1,38 +1,50 @@
 version: '3.5'
 services:
   api1: # API - Instância 01
-    image: docker.io/akitaonrails/rinhabackendapi
+    image: docker.io/akitaonrails/rinhabackendapi:latest
     environment:
       DB_HOST: db
-      DB_POOL: 10
+      DB_POOL: 25
+      RAILS_MAX_THREADS: 20
     hostname: api1
     depends_on:
       - db
       - memcached
     expose:
       - "3000"
+    ulimits:
+      nproc: 1000000
+      nofile:
+        soft: 1000000
+        hard: 1000000
     deploy:
       resources:
         limits:
           cpus: '0.25'
-          memory: '0.5GB'
+          memory: '0.6GB'
 
   api2: # API - Instância 01
-    image: docker.io/akitaonrails/rinhabackendapi
+    image: docker.io/akitaonrails/rinhabackendapi:latest
     environment:
       DB_HOST: db
-      DB_POOL: 10
+      DB_POOL: 25
+      RAILS_MAX_THREADS: 20
     hostname: api2
     depends_on:
       - db
       - memcached
     expose:
       - "3000"
+    ulimits:
+      nproc: 1000000
+      nofile:
+        soft: 1000000
+        hard: 1000000
     deploy:
       resources:
         limits:
           cpus: '0.25'
-          memory: '0.5GB'
+          memory: '0.6GB'
 
   nginx: # Load Balancer
     image: docker.io/nginx:latest
@@ -44,6 +56,11 @@ services:
       - api2
     ports:
       - "9999:9999"
+    ulimits:
+      nproc: 1000000
+      nofile:
+        soft: 1000000
+        hard: 1000000
     deploy:
       resources:
         limits:
@@ -51,14 +68,25 @@ services:
           memory: '0.5GB'
 
   db: # Banco de dados
-   image: docker.io/postgres
-   environment:
-     POSTGRES_PASSWORD: password
-   deploy:
+    image: docker.io/postgres
+    environment:
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    ulimits:
+      nproc: 1000000
+      nofile:
+        soft: 1000000
+        hard: 1000000
+    deploy:
       resources:
         limits:
           cpus: '0.70'
-          memory: '1.3GB'
+          memory: '1GB'
 
   memcached:
     image: memcached:latest
@@ -68,4 +96,4 @@ services:
       resources:
         limits:
           cpus: '0.10'
-          memory: '0.2GB'
+          memory: '0.3GB'

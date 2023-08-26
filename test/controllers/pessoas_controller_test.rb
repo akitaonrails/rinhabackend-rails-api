@@ -57,10 +57,7 @@ class PessoasControllerTest < ActionDispatch::IntegrationTest
   test "should not allow duplicate pessoa" do
     post pessoas_url, params: { pessoa: { apelido: @pessoa.apelido, nascimento: @pessoa.nascimento, nome: @pessoa.nome,
                                 stack: @pessoa.stack } }, as: :json
-    assert_response :created
 
-    post pessoas_url, params: { pessoa: { apelido: @pessoa.apelido, nascimento: @pessoa.nascimento, nome: @pessoa.nome,
-                                stack: @pessoa.stack } }, as: :json
     assert_response :unprocessable_entity
   end
 
