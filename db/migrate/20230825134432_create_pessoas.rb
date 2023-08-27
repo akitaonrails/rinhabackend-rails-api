@@ -4,10 +4,9 @@ class CreatePessoas < ActiveRecord::Migration[7.0]
       t.string :apelido, limit: 32, null: false, index: { unique: true }
       t.string :nome, limit: 100, null: false, index: { unique: true }
       t.datetime :nascimento
-      t.string :stack, array: true, default: []
+      t.string :stack
       t.timestamps
     end
-    add_index :pessoas, :stack, using: 'gin'
   end
 
   def down

@@ -1,26 +1,24 @@
+# Credit: https://github.com/lazaronixon/rinha_de_backend/blob/main/app/models/pessoa.rb
 class Pessoa < ApplicationRecord
-  HARD_SEARCH_LIMIT = 50
-
-  include PgSearch::Model
-  pg_search_scope :by_apelido_nome, against: { apelido: 'A', nome: 'B' }, using: { trigram: { threshold: 0.2 }}
+  self.ignored_columns = %w[searchable]
 
   before_validation :set_id, on: :create
 
+  serialize :stack, type: Array, coder: TagCoder
+  scope :search, -> (value) { where("pessoas.searchable ILIKE ?", "%#{value}%") }
+
   validates :apelido, presence: true, length: { maximum: 32 }
   validates :nome, presence: true, length: { maximum: 100 }
-
-  scope :stack_one_of, ->(stack) { stack ? where('stack && ARRAY[?]::varchar[]', stack) : all }
-  scope :stack_all_of, ->(stack) { stack ? where('stack @> ARRAY[?]::varchar[]', stack) : all }
-
-  def self.search(query)
-    results = by_apelido_nome(query).limit(HARD_SEARCH_LIMIT).all
-    results = stack_one_of(query.split(/,\s*/)).limit(HARD_SEARCH_LIMIT).all if results.empty?
-    results
-  end
+  validate :stack_must_contain_valid_elements
 
   private
 
   def set_id
     self.id ||= SecureRandom.uuid
+  end
+
+  def stack_must_contain_valid_elements
+    return unless stack
+    errors.add(:stack, :invalid) unless stack.all? { |item| item.is_a?(String) }
   end
 end

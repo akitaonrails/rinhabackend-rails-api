@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_08_25_151541) do
+ActiveRecord::Schema[7.0].define(version: 2023_08_27_015102) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_trgm"
   enable_extension "plpgsql"
@@ -19,21 +19,13 @@ ActiveRecord::Schema[7.0].define(version: 2023_08_25_151541) do
     t.string "apelido", limit: 32, null: false
     t.string "nome", limit: 100, null: false
     t.datetime "nascimento"
-    t.string "stack", default: [], array: true
+    t.string "stack"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.virtual "searchable", type: :text, as: "(((((nome)::text || ' '::text) || (apelido)::text) || ' '::text) || (COALESCE(stack, ' '::character varying))::text)", stored: true
     t.index ["apelido"], name: "index_pessoas_on_apelido", unique: true
     t.index ["nome"], name: "index_pessoas_on_nome", unique: true
-    t.index ["stack"], name: "index_pessoas_on_stack", using: :gin
-  end
-
-  create_table "pg_search_documents", force: :cascade do |t|
-    t.text "content"
-    t.string "searchable_type"
-    t.bigint "searchable_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["searchable_type", "searchable_id"], name: "index_pg_search_documents_on_searchable"
+    t.index ["searchable"], name: "index_pessoas_on_searchable", opclass: :gist_trgm_ops, using: :gist
   end
 
 end

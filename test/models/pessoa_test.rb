@@ -27,19 +27,15 @@ class PessoaTest < ActiveSupport::TestCase
     Pessoa.create apelido: 'foo', nome: 'foo foo', nascimento: Date.current, stack: %w[java ruby php bash]
     Pessoa.create apelido: 'bar', nome: 'bar bar', nascimento: Date.current, stack: %w[python perl bash]
 
-    pessoa = Pessoa.stack_one_of(['python'])
+    pessoa = Pessoa.search('python')
     assert_equal pessoa.count, 1
     assert_equal pessoa.first.apelido, 'bar'
 
-    pessoa = Pessoa.stack_one_of(['ruby'])
+    pessoa = Pessoa.search('ruby')
     assert_equal pessoa.count,1
     assert_equal pessoa.first.apelido, 'foo'
 
-    pessoa = Pessoa.stack_all_of(%w[python perl])
-    assert_equal pessoa.count, 1
-    assert_equal pessoa.first.apelido, 'bar'
-
-    pessoa = Pessoa.stack_one_of(['bash'])
+    pessoa = Pessoa.search('bash')
     assert_equal pessoa.count, 2
   end
 
