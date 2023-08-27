@@ -27,8 +27,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.5'
-          memory: '1.5GB'
+          cpus: '4'
+          memory: '2GB'
 
   api2:
     <<: *api
@@ -41,22 +41,6 @@ services:
   api4:
     <<: *api
     hostname: api4
-
-  api5:
-    <<: *api
-    hostname: api5
-
-  api6:
-    <<: *api
-    hostname: api6
-
-  api7:
-    <<: *api
-    hostname: api7
-
-  api8:
-    <<: *api
-    hostname: api8
 
   nginx: # Load Balancer
     image: docker.io/nginx:latest
@@ -78,15 +62,13 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.5'
-          memory: '1.5GB'
+          cpus: '2'
+          memory: '2GB'
 
   db: # Banco de dados
     image: docker.io/postgres
     environment:
       POSTGRES_PASSWORD: password
-    volumes:
-      - ./postgresql-ideal.conf:/etc/postgresql/postgresql.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 5s
@@ -102,7 +84,7 @@ services:
       resources:
         limits:
           cpus: '8'
-          memory: '4GB'
+          memory: '8GB'
 
   memcached:
     image: memcached:latest

@@ -12,6 +12,8 @@ The API itself is not the challenge, but to make it fit within the confines of a
 
 The goal of this version was to make a fully Rails API based app, with enough speed optimizations without completely breaking the framework. Some tricks are not recommended for real production usage, but it leverages the fact that this is a performance oriented challenge.
 
+This version is OVERENGINEERED. I already missed the deadline anyway, so I went all in in experimentation. Because we are CPU limited, it just don't fit. If you want a version 2x better in performance, try [@lazaronixon](https://github.com/lazaronixon/rinha_de_backend/). My version achieves just shy over 11k inserts, his version goes all the way to 36k.
+
 To run this application:
 
     docker-compose up
@@ -74,6 +76,6 @@ SSH in:
 
 Don't forget to change run-test.sh and RinhaBackendSimulation.scala to add your own PATH and HOST name (in case you're running on AWS EC2). Also don't forget to edit docker-compose.yml to not build locally, but fetch the image from docker.io.
 
-And in case you're wondering how a more "realistic" setup would look like, I created a "docker-compose-ideal.yml" that breaks the 1.5 vCPU and 3GB of RAM to a whopping 24 vCPUs and 20GB of RAM. If you have the horsepower for that, run:
+And in case you're wondering how a more "realistic" setup would look like, I created a "docker-compose-ideal.yml" that breaks the 1.5 vCPU and 3GB of RAM to a whopping 30 vCPUs and 22GB of RAM. If you have the horsepower for that, run:
 
     docker-compose -f docker-compose-ideal.yml up --force-recreate --build

@@ -6,13 +6,13 @@ services:
     environment:
       DB_HOST: db
       DB_POOL: 25
-      RAILS_MAX_THREADS: 5
-      WEB_CONCURRENCY: 4
+      RAILS_MAX_THREADS: 4
+      WEB_CONCURRENCY: 2
       RAILS_LOG_LEVEL: warn
-      SUCKER_PUNCH_WORKERS: 3
+      SUCKER_PUNCH_WORKERS: 2
       SUCKER_PUNCH_BATCH_SIZE: 5
       SUCKER_PUNCH_FLUSH_TIMEOUT: 30
-      CACHE_EXPIRES_SECONDS: 70
+      CACHE_EXPIRES_SECONDS: 60
     hostname: api1
     depends_on:
       - db
@@ -27,7 +27,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.4'
+          cpus: '0.45'
           memory: '0.95GB'
 
   api2:
@@ -75,7 +75,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.50'
+          cpus: '0.40'
           memory: '0.70GB'
 
   memcached:
