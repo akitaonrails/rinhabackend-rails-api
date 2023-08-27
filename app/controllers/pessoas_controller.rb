@@ -101,7 +101,7 @@ class PessoasController < ApplicationController
         return
       end
 
-      unless p[:stack].all? { |elem| elem.is_a?(String) }
+      if p[:stack] && !p[:stack].all? { |elem| elem.is_a?(String) }
         head :bad_request
         return
       end
