@@ -36,7 +36,7 @@ class PessoasController < ApplicationController
     # the stress test don't count this request for performance
     PessoaJob.new.perform(:create, nil)
 
-    render plain: Pessoa.count.to_s
+    render plain: "queue counter: #{REDIS_QUEUE.counter(PessoaJob::BUFFER_KEY)} - total: #{Pessoa.count}"
   end
 
   # POST /pessoas

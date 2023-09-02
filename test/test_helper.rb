@@ -11,6 +11,7 @@ class ActiveSupport::TestCase
 
   setup do
     Rails.cache.clear
+    REDIS_QUEUE.clear!(PessoaJob::BUFFER_KEY)
   end
   # Add more helper methods to be used by all tests here...
 end

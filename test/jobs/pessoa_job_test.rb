@@ -1,35 +1,41 @@
 require 'test_helper'
+require 'sidekiq/testing'
+require 'mock_redis'
+require 'minitest/autorun'
 
 class PessoaJobTest < ActiveSupport::TestCase
   setup do
-    # Make sure the buffer is empty before each test
-    PessoaJob.class_variable_set(:@@buffer, Concurrent::Array.new)
-    PessoaJob.class_variable_set(:@@last_flush_time, Time.now)
+    Sidekiq::Testing.fake!
+    @generator = ->(i) { { apelido: "hello #{i}", nome: 'world' } }
   end
 
-  test "buffers until size reaches BUFFER_SIZE and then flushes" do
-    # Seed data until buffer reaches BUFFER_SIZE - 1
-    assert_no_difference('Pessoa.count') do
-      (PessoaJob::BUFFER_SIZE - 1).times do |i|
-        PessoaJob.new.perform(:create, apelido: "John_#{i}", nome: "Doe_#{i}", nascimento: '2000-01-01', stack: ['Ruby'])
-      end
-    end # No flush should have occurred
-
-    # One more to reach BUFFER_SIZE
-    assert_difference('Pessoa.count', PessoaJob::BUFFER_SIZE) do
-      PessoaJob.new.perform(:create, apelido: "John_#{PessoaJob::BUFFER_SIZE}", nome: "Doe_#{PessoaJob::BUFFER_SIZE}", nascimento: '2000-01-01', stack: ['Ruby'])
-    end # Now it should flush
+  test 'should push new element to queue' do
+    PessoaJob.new.perform(:create, { apelido: "hello", nome: "world"} )
+    assert Time.now > REDIS_QUEUE.last_timestamp(PessoaJob::BUFFER_KEY)
+    assert_equal 1, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
   end
 
-  test "flushes after FLUSH_TIMEOUT" do
-    assert_difference("Pessoa.count", 2) do
-      # Seed just one data point
-      PessoaJob.new.perform(:create, apelido: 'John_0', nome: 'Doe_0', nascimento: '2000-01-01', stack: ['Ruby'])
+  test 'should flush and insert all' do
+    validation = ->(params) { assert_equal PessoaJob::BUFFER_SIZE, params.size }
 
-      # Move time forward beyond FLUSH_TIMEOUT
-      Timecop.freeze(Time.now + (PessoaJob::FLUSH_TIMEOUT + 1).seconds) do
-        PessoaJob.new.perform(:create, apelido: 'Jane_1', nome: 'Doe_1', nascimento: '2000-01-02', stack: ['JS'])
+    Pessoa.stub(:insert_all, validation) do
+      (PessoaJob::BUFFER_SIZE + 2).times do |i|
+        PessoaJob.new.perform(:create, @generator.call(i))
       end
     end
+    assert_equal 2, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
+  end
+
+  test 'should flush after timeout' do
+    PessoaJob.new.perform(:create, @generator.call(1))
+    PessoaJob.new.perform(:create, @generator.call(2))
+    assert_equal 2, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
+
+    Timecop.travel(Time.now + 1.hour) do
+      Pessoa.stub(:insert_all, nil) do
+        PessoaJob.new.perform(:create, @generator.call(3))
+      end
+    end
+    assert_equal 0, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
   end
 end

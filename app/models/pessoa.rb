@@ -5,7 +5,7 @@ class Pessoa < ApplicationRecord
   before_validation :set_id, on: :create
 
   serialize :stack, type: Array, coder: TagCoder
-  scope :search, -> (value) { where("pessoas.searchable ILIKE ?", "%#{value}%") }
+  scope :search, ->(value) { where("pessoas.searchable ILIKE ?", "%#{value}%") }
 
   validates :apelido, presence: true, length: { maximum: 32 }
   validates :nome, presence: true, length: { maximum: 100 }

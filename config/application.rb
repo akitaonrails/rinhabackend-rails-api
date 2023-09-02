@@ -15,11 +15,12 @@ require "action_view/railtie"
 # require "sprockets/railtie"
 # require "rails/test_unit/railtie" # Comment out for TestUnit
 
-require './lib/tag_coder'
-
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
+
+require './lib/tag_coder'
+require './lib/redis_queue'
 
 module Rinhabackend
   class Application < Rails::Application

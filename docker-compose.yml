@@ -5,35 +5,56 @@ services:
     build: ./
     environment:
       DB_HOST: postgres
-      DB_POOL: 45
-      RAILS_MAX_THREADS: 4
+      DB_POOL: 95
+      RAILS_MAX_THREADS: 10
       WEB_CONCURRENCY: 2
       RAILS_LOG_LEVEL: warn
       REDIS_HOST: redis
       REDIS_POOL_SIZE: 10
-      JOB_BATCH_SIZE: 5
+      JOB_BATCH_SIZE: 50
       JOB_FLUSH_TIMEOUT: 30
       CACHE_EXPIRES_SECONDS: 60
+      RAILS_LOG_TO_STDOUT: 'true'
     hostname: api1
     depends_on:
       - postgres
       - redis
     expose:
       - "3000"
-    ulimits:
-      nproc: 1000000
-      nofile:
-        soft: 1000000
-        hard: 1000000
+    networks:
+      - mynetwork
     deploy:
       resources:
         limits:
-          cpus: '0.45'
-          memory: '0.4GB'
+          cpus: '0.325'
+          memory: '0.5GB'
 
   api2:
     <<: *api
     hostname: api2
+
+  sidekiq:
+    <<: *api
+    hostname: sidekiq
+    environment:
+      DB_HOST: postgres
+      DB_POOL: 5
+      RAILS_MAX_THREADS: 1
+      WEB_CONCURRENCY: 1
+      RAILS_LOG_LEVEL: warn
+      REDIS_HOST: redis
+      REDIS_POOL_SIZE: 5
+      JOB_BATCH_SIZE: 5
+      JOB_FLUSH_TIMEOUT: 30
+      CACHE_EXPIRES_SECONDS: 60
+    command: /app/bin/bundle exec sidekiq
+    networks:
+      - mynetwork
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: '0.2GB'
 
   nginx: # Load Balancer
     image: docker.io/nginx:latest
@@ -43,6 +64,7 @@ services:
     depends_on:
       - api1
       - api2
+      - sidekiq
     ports:
       - "9999:9999"
     ulimits:
@@ -50,6 +72,8 @@ services:
       nofile:
         soft: 1000000
         hard: 1000000
+    networks:
+      - mynetwork
     deploy:
       resources:
         limits:
@@ -58,10 +82,13 @@ services:
 
   postgres: # Banco de dados
     image: docker.io/postgres
+    hostname: postgres
     environment:
+      POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: password
+    expose:
+      - "5432"
     volumes:
-      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql
       - ./postgresql.conf:/docker-entrypoint-initdb.d/postgresql.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
@@ -69,18 +96,28 @@ services:
       timeout: 5s
       retries: 20
       start_period: 10s
+    networks:
+      - mynetwork
     deploy:
       resources:
         limits:
-          cpus: '0.9'
-          memory: '1.4GB'
+          cpus: '0.5'
+          memory: '1.1GB'
 
   redis:
     image: docker.io/redis:latest
     hostname: redis
     command: redis-server --save "" --appendonly no --maxclients 20000
+    expose:
+      - "6379"
+    networks:
+      - mynetwork
     deploy:
       resources:
         limits:
-          cpus: '0.15'
-          memory: '0.3GB'
+          cpus: '0.1'
+          memory: '0.2GB'
+
+networks:
+  mynetwork:
+    driver: bridge

@@ -24,7 +24,7 @@ class PessoasControllerTest < ActionDispatch::IntegrationTest
     get contagem_pessoas_url, as: :plain
     assert_response :success
 
-    assert_equal response.body, '2'
+    assert_includes response.body, 'total: 2'
   end
 
   test "should create pessoa" do
