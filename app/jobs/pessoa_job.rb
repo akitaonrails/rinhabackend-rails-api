@@ -1,9 +1,8 @@
 class PessoaJob
-  include SuckerPunch::Job
-  workers ENV.fetch('SUCKER_PUNCH_WORKERS', 4)
+  include Sidekiq::Job
 
-  BUFFER_SIZE = ENV.fetch('SUCKER_PUNCH_BATCH_SIZE', 10).to_i
-  FLUSH_TIMEOUT = ENV.fetch('SUCKER_PUNCH_FLUSH_TIMEOUT', 30).to_i
+  BUFFER_SIZE = ENV.fetch('JOB_BATCH_SIZE', 10).to_i
+  FLUSH_TIMEOUT = ENV.fetch('JOB_FLUSH_TIMEOUT', 30).to_i
 
   @@buffer = Concurrent::Array.new
   @@last_flush_time = Time.now
@@ -11,6 +10,11 @@ class PessoaJob
   def perform(action, params)
     case action
     when :create
+      if params.nil?
+        flush_buffer
+        return
+      end
+
       @@buffer.push(params)
       if (@@buffer.size >= BUFFER_SIZE) || (Time.now - @@last_flush_time) > FLUSH_TIMEOUT.seconds
         flush_buffer

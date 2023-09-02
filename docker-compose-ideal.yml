@@ -9,9 +9,10 @@ services:
       RAILS_MAX_THREADS: 5
       WEB_CONCURRENCY: 4
       RAILS_LOG_LEVEL: warn
-      SUCKER_PUNCH_WORKERS: 2
-      SUCKER_PUNCH_BATCH_SIZE: 10
-      SUCKER_PUNCH_FLUSH_TIMEOUT: 30
+      REDIS_HOST: redis
+      REDIS_POOL_SIZE: 10
+      JOB_BATCH_SIZE: 10
+      JOB_FLUSH_TIMEOUT: 30
       CACHE_EXPIRES_SECONDS: 90
     hostname: api1
     depends_on:

@@ -8,10 +8,7 @@ class PessoasController < ApplicationController
   # GET /pessoas?t=query
   def index
     if params[:t]
-      # Caching query in Rails cache
-      pessoas = Rails.cache.fetch("pessoa_search_#{params[:t]}", expires_in: CACHE_EXPIRES) do
-        Pessoa.search(params[:t]).as_json(only: JSON_FIELDS)
-      end
+      pessoas = Pessoa.search(params[:t]).as_json(only: JSON_FIELDS)
 
       # HTTP caching
       fresh_when etag: Digest::MD5.hexdigest(pessoas.to_json)
@@ -25,7 +22,7 @@ class PessoasController < ApplicationController
   # GET /pessoas/1
   def show
     if @pessoa.nil?
-      render json: { error: "pessoa id #{params[:id]} not found"}, status: :not_found
+      render json: { error: "pessoa id #{params[:id]} not found" }, status: :not_found
     else
       # HTTP caching
       fresh_when @pessoa
@@ -35,9 +32,9 @@ class PessoasController < ApplicationController
   end
 
   def contagem
-    # hack: wait for Sucker Punch to empty its queue before providing the final count
+    # hack: wait for Sidekiq to empty its queue before providing the final count
     # the stress test don't count this request for performance
-    SuckerPunch::Queue.wait
+    PessoaJob.new.perform(:create, nil)
 
     render plain: Pessoa.count.to_s
   end
@@ -53,7 +50,7 @@ class PessoasController < ApplicationController
         return
       end
 
-      # hack so SHOW works before sucker punch hits the db eventually
+      # hack so SHOW works before Sidekiq hits the db eventually
       Rails.cache.write("pessoa/#{@pessoa.id}", @pessoa, expires_in: CACHE_EXPIRES)
       Rails.cache.write("pessoa/#{@pessoa.apelido}", '', expires_in: CACHE_EXPIRES)
 
@@ -81,29 +78,30 @@ class PessoasController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_pessoa
-      @pessoa = Rails.cache.fetch("pessoa/#{params[:id]}", expires_in: CACHE_EXPIRES) do
-        Pessoa.find_by(id: params[:id])
-      end
+
+  # Use callbacks to share common setup or constraints between actions.
+  def set_pessoa
+    @pessoa = Rails.cache.fetch("pessoa/#{params[:id]}", expires_in: CACHE_EXPIRES) do
+      Pessoa.find_by(id: params[:id])
+    end
+  end
+
+  # Only allow a list of trusted parameters through.
+  def pessoa_params
+    params.require(:pessoa).permit(:apelido, :nome, :nascimento, stack: [])
+  end
+
+  def validate_params
+    p = pessoa_params
+
+    unless p[:apelido].is_a?(String) && p[:nome].is_a?(String)
+      head :bad_request
+      return
     end
 
-    # Only allow a list of trusted parameters through.
-    def pessoa_params
-      params.require(:pessoa).permit(:apelido, :nome, :nascimento, stack: [])
+    if p[:stack] && !p[:stack].all? { |elem| elem.is_a?(String) }
+      head :bad_request
+      return
     end
-
-    def validate_params
-      p = pessoa_params
-
-      unless p[:apelido].is_a?(String) && p[:nome].is_a?(String)
-        head :bad_request
-        return
-      end
-
-      if p[:stack] && !p[:stack].all? { |elem| elem.is_a?(String) }
-        head :bad_request
-        return
-      end
-    end
+  end
 end

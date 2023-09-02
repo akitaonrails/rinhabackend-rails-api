@@ -70,6 +70,7 @@ GEM
       msgpack (~> 1.2)
     builder (3.2.4)
     concurrent-ruby (1.2.2)
+    connection_pool (2.4.1)
     crass (1.0.6)
     dalli (3.2.5)
     date (3.3.3)
@@ -145,10 +146,16 @@ GEM
       thor (~> 1.0)
       zeitwerk (~> 2.5)
     rake (13.0.6)
+    redis (4.8.1)
+    redis-client (0.16.0)
+      connection_pool
     reline (0.3.8)
       io-console (~> 0.5)
-    sucker_punch (3.1.0)
-      concurrent-ruby (~> 1.0)
+    sidekiq (7.1.2)
+      concurrent-ruby (< 2)
+      connection_pool (>= 2.3.0)
+      rack (>= 2.2.4)
+      redis-client (>= 0.14.0)
     thor (1.2.2)
     timecop (0.9.8)
     timeout (0.4.0)
@@ -169,7 +176,8 @@ DEPENDENCIES
   pg
   puma (~> 5.0)
   rails (~> 7.0.7, >= 7.0.7.2)
-  sucker_punch
+  redis
+  sidekiq (~> 7.1)
   timecop (~> 0.9.8)
   tzinfo-data
 

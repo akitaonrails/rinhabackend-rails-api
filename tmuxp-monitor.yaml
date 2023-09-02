@@ -1,0 +1,9 @@
+session_name: my-tmux-session
+windows:
+  - window_name: my-window
+    panes:
+      - htop -F puma
+      - htop -F postgres
+      - htop -F nginx
+      - htop -F redis
+    layout: tiled
