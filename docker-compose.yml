@@ -9,6 +9,7 @@ services:
       RAILS_MAX_THREADS: 100
       WEB_CONCURRENCY: 2
       RAILS_LOG_LEVEL: warn
+      RAILS_ENV: production
       REDIS_HOST: redis
       REDIS_POOL_SIZE: 400
       JOB_BATCH_SIZE: 50
@@ -37,13 +38,14 @@ services:
     hostname: sidekiq
     environment:
       DB_HOST: postgres
-      DB_POOL: 5
-      RAILS_MAX_THREADS: 5
+      DB_POOL: 2
+      RAILS_MAX_THREADS: 2
       WEB_CONCURRENCY: 1
       RAILS_LOG_LEVEL: warn
+      RAILS_ENV: production
       REDIS_HOST: redis
-      REDIS_POOL_SIZE: 10
-      JOB_BATCH_SIZE: 5
+      REDIS_POOL_SIZE: 2
+      JOB_BATCH_SIZE: 100
       JOB_FLUSH_TIMEOUT: 30
       CACHE_EXPIRES_SECONDS: 60
     command: /app/bin/bundle exec sidekiq -c 2

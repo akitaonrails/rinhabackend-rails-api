@@ -10,11 +10,12 @@ class RedisQueue
   def initialize(queue)
     @queue = queue
     @key_counter = "#{queue}-counter"
+    @lock_key = "#{@queue}-lock"
     @redis_pool = ConnectionPool.new(
       size: ENV.fetch('REDIS_POOL_SIZE', '5').to_i,
       timeout: ENV.fetch('REDIS_TIMEOUT', '5').to_i
     ) do
-      Rails.env.production? ? Redis.new(uri: redis_uri) : MockRedis.new
+      Rails.env.production? ? Redis.new(url: redis_url) : MockRedis.new
     end
   end
 
@@ -37,10 +38,16 @@ class RedisQueue
 
   def fetch_batch(batch_size = 10)
     @redis_pool.with do |conn|
-      buffer_size = conn.llen(@queue)
-      end_index = [batch_size - 1, buffer_size - 1].min
-      items = conn.lrange(@queue, 0, end_index).map { |item| JSON.parse(item || 'null') }
-      conn.ltrim(@queue, end_index + 1, -1)
+      acquire_lock(conn, @lock_key)
+      items = []
+      begin
+        buffer_size = conn.llen(@queue)
+        end_index = [batch_size - 1, buffer_size - 1].min
+        items = conn.lrange(@queue, 0, end_index).map { |item| JSON.parse(item || 'null') }
+        conn.ltrim(@queue, end_index + 1, -1)
+      ensure
+        release_lock(conn, @lock_key)
+      end
       items
     end
   end
@@ -64,7 +71,19 @@ class RedisQueue
 
   private
 
-  def redis_uri
-    @redis_uri ||= REDIS_URL.format(ENV.fetch('REDIS_HOST', 'localhost'))
+  def redis_url
+    @redis_url ||= REDIS_URL % ENV.fetch('REDIS_HOST', 'localhost')
+  end
+
+  def acquire_lock(redis, lock_key)
+    # Retry acquiring the lock until successful
+    loop do
+      break if redis.set(lock_key, 'LOCKED', nx: true, ex: 10) # Set a 10-second timeout for the lock
+      sleep 0.1 # Sleep for a small interval before trying again
+    end
+  end
+
+  def release_lock(redis, lock_key)
+    redis.del(lock_key)
   end
 end

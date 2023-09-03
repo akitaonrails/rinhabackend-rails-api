@@ -38,7 +38,7 @@ class PessoasController < ApplicationController
     PessoaJob.perform_async(:flush, nil)
     sleep 3
 
-    render plain: "batch queue: #{Rails.cache.read('insert_batch-counter')} total: #{Pessoa.count}"
+    render plain: "batch queue: #{Rails.cache.read('insert_buffer-counter')} total: #{Pessoa.count}"
   end
 
   # POST /pessoas
@@ -47,7 +47,7 @@ class PessoasController < ApplicationController
 
     if @pessoa.valid?
       # hack to find duplicate without hitting the db
-      if Rails.cache.fetch("pessoa/#{@pessoa.apelido}")
+      if Rails.cache.fetch("a/#{@pessoa.apelido}")
         head :unprocessable_entity
         return
       end
@@ -55,8 +55,8 @@ class PessoasController < ApplicationController
       PessoaJob.perform_async(:create, pessoa_params.merge(id: @pessoa.id).to_h)
 
       # hack so SHOW works before Sidekiq hits the db eventually
-      Rails.cache.write("pessoa/#{@pessoa.id}", @pessoa, expires_in: CACHE_EXPIRES)
-      Rails.cache.write("pessoa/#{@pessoa.apelido}", '', expires_in: CACHE_EXPIRES)
+      Rails.cache.write("p/#{@pessoa.id}", @pessoa, expires_in: CACHE_EXPIRES)
+      Rails.cache.write("a/#{@pessoa.apelido}", '', expires_in: CACHE_EXPIRES)
 
       # head :created, location: pessoa_url(@pessoa)
       head :created, location: "http://localhost:9999/pessoas/#{@pessoa.id}"
@@ -84,7 +84,7 @@ class PessoasController < ApplicationController
 
   # Use callbacks to share common setup or constraints between actions.
   def set_pessoa
-    @pessoa = Rails.cache.fetch("pessoa/#{params[:id]}", expires_in: CACHE_EXPIRES) do
+    @pessoa = Rails.cache.fetch("p/#{params[:id]}", expires_in: CACHE_EXPIRES) do
       Pessoa.find_by(id: params[:id])
     end
   end

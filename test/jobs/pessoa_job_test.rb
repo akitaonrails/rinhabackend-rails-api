@@ -11,23 +11,40 @@ class PessoaJobTest < ActiveSupport::TestCase
 
   test 'should push new element to queue' do
     job = PessoaJob.new
-    job.send(:get_buffer).clear!
+    job.buffer.clear!
 
-    job.perform(:create, { apelido: "hello", nome: "world"} )
-    assert_equal 1, job.send(:get_buffer).size
+    job.perform('create', { apelido: "hello", nome: "world"} )
+    assert_equal 1, job.buffer.size
   end
 
   test 'should flush and insert all' do
     job = PessoaJob.new
-    job.send(:get_buffer).clear!
+    job.buffer.clear!
 
-    validation = ->(params) { assert_equal PessoaJob::BUFFER_SIZE, params.size }
+    validation = ->(params, _) { assert_equal PessoaJob::BUFFER_SIZE, params.size }
 
     Pessoa.stub(:insert_all, validation) do
       (PessoaJob::BUFFER_SIZE + 2).times do |i|
-        job.perform(:create, @generator.call(i))
+        job.perform('create', @generator.call(i))
       end
     end
-    assert_equal 2, job.send(:get_buffer).size
+    assert_equal 2, job.buffer.size
+  end
+
+  test 'flushes remaining queue items' do
+    job = PessoaJob.new
+    job.buffer.clear!
+
+    assert PessoaJob::BUFFER_SIZE > 2
+
+    Pessoa.stub(:insert_all, nil) do
+      2.times do |i|
+        job.perform('create', @generator.call(i))
+      end
+    end
+    job.perform('flush', nil)
+
+    assert_equal 0, job.buffer.size
+    assert_equal 2, Rails.cache.read("#{PessoaJob::BUFFER_KEY}-counter")
   end
 end
