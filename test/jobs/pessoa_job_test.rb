@@ -11,7 +11,6 @@ class PessoaJobTest < ActiveSupport::TestCase
 
   test 'should push new element to queue' do
     PessoaJob.new.perform(:create, { apelido: "hello", nome: "world"} )
-    assert Time.now > REDIS_QUEUE.last_timestamp(PessoaJob::BUFFER_KEY)
     assert_equal 1, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
   end
 
@@ -24,29 +23,5 @@ class PessoaJobTest < ActiveSupport::TestCase
       end
     end
     assert_equal 2, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
-  end
-
-  test 'should flush after timeout' do
-    PessoaJob.new.perform(:create, @generator.call(1))
-    PessoaJob.new.perform(:create, @generator.call(2))
-    assert_equal 2, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
-
-    Timecop.travel(Time.now + 1.hour) do
-      Pessoa.stub(:insert_all, nil) do
-        PessoaJob.new.perform(:create, @generator.call(3))
-      end
-    end
-    assert_equal 0, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
-  end
-
-  test 'should clean remaining buffer' do
-    PessoaJob.new.perform(:create, @generator.call(1))
-    PessoaJob.new.perform(:create, @generator.call(2))
-    assert_equal 2, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
-
-    Pessoa.stub(:insert_all, nil) do
-      PessoaJob.new.perform(:flush, nil)
-    end
-    assert_equal 0, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
   end
 end

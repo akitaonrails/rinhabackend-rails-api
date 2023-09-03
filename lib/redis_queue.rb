@@ -23,17 +23,7 @@ class RedisQueue
 
     @redis_pool.with do |conn|
       conn.rpush(queue, value.to_json)
-      conn.set("#{queue}-timestamp", Time.now.to_json)
       conn.incr("#{queue}-counter")
-    end
-  end
-
-  def last_timestamp(queue)
-    return nil unless queue
-
-    @redis_pool.with do |conn|
-      timestamp = JSON.parse(conn.get("#{queue}-timestamp") || 'null')
-      timestamp ? Time.parse(timestamp) : nil
     end
   end
 
@@ -57,7 +47,6 @@ class RedisQueue
 
   def clear!(queue)
     @redis_pool.with do |conn|
-      conn.del("#{queue}-timestamp")
       conn.del("#{queue}-counter")
       conn.del(queue)
     end
@@ -71,5 +60,3 @@ class RedisQueue
     end
   end
 end
-
-REDIS_QUEUE = RedisQueue.new
