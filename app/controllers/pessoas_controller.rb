@@ -102,6 +102,13 @@ class PessoasController < ApplicationController
       return
     end
 
+    begin
+      pessoa_params[:nascimento] = Time.parse(pessoa_params[:nascimento])
+    rescue
+      head :bad_request
+      return
+    end
+
     if p[:stack] && !p[:stack].all? { |elem| elem.is_a?(String) }
       head :bad_request
       return

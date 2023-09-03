@@ -48,6 +48,12 @@ class PessoasControllerTest < ActionDispatch::IntegrationTest
     assert_response :bad_request
   end
 
+  test "should not allow nascimento not being a date" do
+    post pessoas_url, params: { pessoa: { apelido: 'foo', nascimento: 'foo', nome: 'foo foo', stack: @pessoa.stack } }, as: :json
+
+    assert_response :bad_request
+  end
+
   test "should not allow stack having element not being a string" do
     post pessoas_url, params: { pessoa: { apelido: 'foo', nascimento: @pessoa.nascimento, nome: 'foo foo',
                                 stack: ['ruby', 3] } }, as: :json

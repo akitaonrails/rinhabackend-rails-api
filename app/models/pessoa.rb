@@ -9,6 +9,7 @@ class Pessoa < ApplicationRecord
 
   validates :apelido, presence: true, length: { maximum: 32 }
   validates :nome, presence: true, length: { maximum: 100 }
+  validates :nascimento, presence: true
 
   private
 
