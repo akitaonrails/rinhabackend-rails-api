@@ -2,23 +2,23 @@ require "test_helper"
 
 class PessoaTest < ActiveSupport::TestCase
   test 'is validating apelido size limit' do
-    pessoa = Pessoa.new apelido: 'abcdefghijklmnopqrstuvwxyz01234567890', nome: 'Valid name'
+    pessoa = Pessoa.new apelido: 'abcdefghijklmnopqrstuvwxyz01234567890', nome: 'Valid name', stack: []
     assert_not pessoa.valid?
   end
 
   test 'is validating nome size limit' do
-    pessoa = Pessoa.new apelido: 'valid apelido', nome: 'abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890'
+    pessoa = Pessoa.new apelido: 'valid apelido', nome: 'abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890abcdefghijklmnopqrstuvwxyz01234567890', stack: []
     assert_not pessoa.valid?
   end
 
   test 'cannot duplicate apelido' do
-    fields = { apelido: 'valid apelido', nome: 'valid nome', nascimento: Date.current, stack: nil }
+    fields = { apelido: 'valid apelido', nome: 'valid nome', nascimento: Date.current, stack: [] }
     assert Pessoa.create fields
     assert_raise(ActiveRecord::RecordNotUnique) { Pessoa.create fields.merge(nome: 'some other nome') }
   end
 
   test 'cannot duplicate nome' do
-    fields = { apelido: 'valid apelido', nome: 'valid nome', nascimento: Date.current, stack: nil }
+    fields = { apelido: 'valid apelido', nome: 'valid nome', nascimento: Date.current, stack: [] }
     assert Pessoa.create fields
     assert_raise(ActiveRecord::RecordNotUnique) { Pessoa.create fields.merge(apelido: 'some other apelido') }
   end
