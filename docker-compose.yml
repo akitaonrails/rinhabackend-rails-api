@@ -5,8 +5,8 @@ services:
     build: ./
     environment:
       DB_HOST: postgres
-      DB_POOL: 15
-      RAILS_MAX_THREADS: 7
+      DB_POOL: 200
+      RAILS_MAX_THREADS: 100
       WEB_CONCURRENCY: 2
       RAILS_LOG_LEVEL: warn
       RAILS_ENV: production
@@ -93,6 +93,7 @@ services:
     environment:
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: password
+    command: postgres -c 'max_connections=450'
     expose:
       - "5432"
     volumes:

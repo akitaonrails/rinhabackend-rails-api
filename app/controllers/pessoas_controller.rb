@@ -8,7 +8,7 @@ class PessoasController < ApplicationController
   # GET /pessoas?t=query
   def index
     if params[:t]
-      pessoas = Pessoa.search(params[:t])
+      pessoas = Pessoa.search(params[:t]).limit(50)
 
       # # HTTP caching
       #  - no need here because the stress test don't call the same URL twice
