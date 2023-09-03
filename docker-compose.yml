@@ -5,16 +5,18 @@ services:
     build: ./
     environment:
       DB_HOST: postgres
-      DB_POOL: 10
-      RAILS_MAX_THREADS: 5
+      DB_POOL: 15
+      RAILS_MAX_THREADS: 7
       WEB_CONCURRENCY: 2
       RAILS_LOG_LEVEL: warn
       RAILS_ENV: production
       REDIS_HOST: redis
       REDIS_POOL_SIZE: 20
-      JOB_BATCH_SIZE: 50
+      JOB_BATCH_SIZE: 10
       CACHE_EXPIRES_SECONDS: 60
       RAILS_LOG_TO_STDOUT: 'true'
+      RUBY_YJIT_ENABLE: 1
+      RAILS_MASTER_KEY: 84ec93b5f81d27f8fdf7fc71d7b28e15
     hostname: api1
     depends_on:
       - postgres
@@ -33,7 +35,7 @@ services:
     <<: *api
     hostname: api2
 
-  sidekiq:
+  sidekiq1: &sidekiq
     <<: *api
     hostname: sidekiq
     environment:
@@ -45,15 +47,22 @@ services:
       RAILS_ENV: production
       REDIS_HOST: redis
       REDIS_POOL_SIZE: 1
-      JOB_BATCH_SIZE: 100
+      JOB_BATCH_SIZE: 10
       JOB_FLUSH_TIMEOUT: 30
       CACHE_EXPIRES_SECONDS: 60
-    command: /app/bin/bundle exec sidekiq -c 1
+      RAILS_LOG_TO_STDOUT: 'true'
+      RUBY_YJIT_ENABLE: 1
+      RAILS_MASTER_KEY: 84ec93b5f81d27f8fdf7fc71d7b28e15
+    command: /rails/bin/bundle exec sidekiq -c 1 -q insert_buffer
     deploy:
       resources:
         limits:
-          cpus: '0.1'
-          memory: '0.3GB'
+          cpus: '0.05'
+          memory: '0.15GB'
+
+  sidekiq2:
+    <<: *sidekiq
+    command: /rails/bin/bundle exec sidekiq -c 1 -q flush
 
   nginx: # Load Balancer
     image: docker.io/nginx:latest
@@ -63,7 +72,6 @@ services:
     depends_on:
       - api1
       - api2
-      - sidekiq
     ports:
       - "9999:9999"
     ulimits:
@@ -76,7 +84,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.15'
+          cpus: '0.1'
           memory: '0.3GB'
 
   postgres: # Banco de dados
@@ -100,7 +108,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.3'
+          cpus: '0.35'
           memory: '1.5GB'
 
   redis:

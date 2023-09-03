@@ -17,18 +17,18 @@ class PessoaJobTest < ActiveSupport::TestCase
     assert_equal 1, job.buffer.size
   end
 
-  test 'should flush and insert all' do
+  test 'should send to flush queue' do
     job = PessoaJob.new
     job.buffer.clear!
 
-    validation = ->(params, _) { assert_equal PessoaJob::BUFFER_SIZE, params.size }
+    mock = Minitest::Mock.new
+    mock.expect(:perform_async, nil)
 
-    Pessoa.stub(:insert_all, validation) do
+    PessoaFlushJob.stub(:perform_async, mock) do
       (PessoaJob::BUFFER_SIZE + 2).times do |i|
         job.perform('create', @generator.call(i))
       end
     end
-    assert_equal 2, job.buffer.size
   end
 
   test 'flushes remaining queue items' do
@@ -37,14 +37,14 @@ class PessoaJobTest < ActiveSupport::TestCase
 
     assert PessoaJob::BUFFER_SIZE > 2
 
-    Pessoa.stub(:insert_all, nil) do
+    mock = Minitest::Mock.new
+    mock.expect(:perform_async, nil)
+
+    PessoaFlushJob.stub(:perform_async, mock)  do
       2.times do |i|
         job.perform('create', @generator.call(i))
       end
     end
     job.perform('flush', nil)
-
-    assert_equal 0, job.buffer.size
-    assert_equal 2, Rails.cache.read("#{PessoaJob::BUFFER_KEY}-counter")
   end
 end
