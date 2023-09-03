@@ -3,28 +3,27 @@ require 'mock_redis'
 
 class RedisQueueTest < ActiveSupport::TestCase
   setup do
-    @key = 'foo'
-    REDIS_QUEUE.clear!(@key)
+    @queue = RedisQueue.new("test")
 
-    REDIS_QUEUE.push(@key, { a: 'foo' })
-    REDIS_QUEUE.push(@key, { a: 'bar' })
-    REDIS_QUEUE.push(@key, { a: 'hello' })
-    REDIS_QUEUE.push(@key, { a: 'world' })
+    @queue.push({ a: 'foo' })
+    @queue.push({ a: 'bar' })
+    @queue.push({ a: 'hello' })
+    @queue.push({ a: 'world' })
   end
 
   test 'should push new item and set timestamp and counter' do
-    assert_equal 4, REDIS_QUEUE.size(@key)
+    assert_equal 4, @queue.size()
   end
 
   test 'should check if list is being correctly appended' do
-    values = REDIS_QUEUE.fetch_batch(@key, 3).map { |item| item['a'] }
+    values = @queue.fetch_batch(3).map { |item| item['a'] }
     assert_equal ['foo', 'bar', 'hello'], values
 
-    values = REDIS_QUEUE.fetch_batch(@key, 3).map { |item| item['a'] }
+    values = @queue.fetch_batch(3).map { |item| item['a'] }
     assert_equal ['world'], values
   end
 
   test 'should have correct counter' do
-    assert_equal 4, REDIS_QUEUE.counter(@key)
+    assert_equal 4, @queue.counter()
   end
 end

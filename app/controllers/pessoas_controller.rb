@@ -38,7 +38,7 @@ class PessoasController < ApplicationController
     PessoaJob.perform_async(:flush, nil)
     sleep 3
 
-    render plain: "#{Pessoa.count}"
+    render plain: "batch queue: #{Rails.cache.read('insert_batch-counter')} total: #{Pessoa.count}"
   end
 
   # POST /pessoas

@@ -10,18 +10,24 @@ class PessoaJobTest < ActiveSupport::TestCase
   end
 
   test 'should push new element to queue' do
-    PessoaJob.new.perform(:create, { apelido: "hello", nome: "world"} )
-    assert_equal 1, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
+    job = PessoaJob.new
+    job.send(:get_buffer).clear!
+
+    job.perform(:create, { apelido: "hello", nome: "world"} )
+    assert_equal 1, job.send(:get_buffer).size
   end
 
   test 'should flush and insert all' do
+    job = PessoaJob.new
+    job.send(:get_buffer).clear!
+
     validation = ->(params) { assert_equal PessoaJob::BUFFER_SIZE, params.size }
 
     Pessoa.stub(:insert_all, validation) do
       (PessoaJob::BUFFER_SIZE + 2).times do |i|
-        PessoaJob.new.perform(:create, @generator.call(i))
+        job.perform(:create, @generator.call(i))
       end
     end
-    assert_equal 2, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
+    assert_equal 2, job.send(:get_buffer).size
   end
 end

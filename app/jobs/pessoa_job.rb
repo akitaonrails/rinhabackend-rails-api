@@ -4,10 +4,14 @@ class PessoaJob
   BUFFER_SIZE = ENV.fetch('JOB_BATCH_SIZE', 10).to_i
   BUFFER_KEY = 'insert_buffer'.freeze
 
+  def initialize
+    @@buffer ||= RedisQueue.new(BUFFER_KEY)
+  end
+
   def perform(action, params)
     case action
     when :create
-      REDIS_QUEUE.push(BUFFER_KEY, params)
+      @@buffer.push(params)
       flush_buffer if enough_buffer?
     when :update
       Pessoa.upsert(params, id: params[:id])
@@ -19,12 +23,16 @@ class PessoaJob
   private
 
   def enough_buffer?
-    REDIS_QUEUE.size(BUFFER_KEY) >= BUFFER_SIZE
+    @@buffer.size >= BUFFER_SIZE
   end
 
   def flush_buffer
-    buffer_snapshot = REDIS_QUEUE.fetch_batch(BUFFER_KEY, BUFFER_SIZE)
+    buffer_snapshot = @@buffer.fetch_batch(BUFFER_SIZE)
 
     Pessoa.insert_all(buffer_snapshot)
+  end
+
+  def get_buffer
+    @@buffer
   end
 end
