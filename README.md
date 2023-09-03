@@ -12,7 +12,69 @@ The API itself is not the challenge, but to make it fit within the confines of a
 
 The goal of this version was to make a fully Rails API based app, with enough speed optimizations without completely breaking the framework. Some tricks are not recommended for real production usage, but it leverages the fact that this is a performance oriented challenge.
 
-This version is OVERENGINEERED. I already missed the deadline anyway, so I went all in in experimentation. Because we are CPU limited, it just don't fit. If you want a version 2x better in performance, try [@lazaronixon](https://github.com/lazaronixon/rinha_de_backend/). My version achieves just shy over 11k inserts, his version goes all the way to 36k.
+This version is OVERENGINEERED. I already missed the deadline anyway, so I went all in in experimentation. I implemented Rails.cache with Redis and async jobs with Sidekiq to queue up the inserts and another job to flush bulk inserts. You don't need it to peak in this stress test.
+
+[@lazaronixon](https://github.com/lazaronixon/rinha_de_backend/) did a much simpler and straight forward version that already maxes out the stress test insertion criteria. But this is for fun.
+
+I did had a discovery: I spent hours testing this thinking that my version had some bug that was keeping it down, below 20k even. But turns out that this line in docker-compose.yml is not working properly and I have no idea why:
+
+    volumes:
+      - ./postgresql.conf:/docker-entrypoint-initdb.d/postgresql.conf
+
+In this config I had set a high max_connections, but the container was actually loading with just the default 100. That was the problem. You can check the database by connecting to it directly after loading docker compose up:
+
+    ❯ docker-compose exec postgres psql -U postgres
+        psql (15.4 (Debian 15.4-1.pgdg120+1))
+        Type "help" for help.
+
+        postgres=# SHOW max_connections;
+        max_connections
+        -----------------
+        100
+        (1 row)
+
+To make sure it's actually increasing the max connections, I had to do:
+
+    command: postgres -c 'max_connections=450'
+
+### RESULTS
+
+```
+================================================================================
+---- Global Information --------------------------------------------------------
+> request count                                     108213 (OK=97044  KO=11169 )
+> min response time                                      0 (OK=0      KO=3     )
+> max response time                                  60001 (OK=60000  KO=60001 )
+> mean response time                                  1855 (OK=1661   KO=3536  )
+> std deviation                                       8622 (OK=7720   KO=14116 )
+> response time 50th percentile                         25 (OK=90     KO=7     )
+> response time 75th percentile                        602 (OK=684    KO=9     )
+> response time 95th percentile                       1999 (OK=1980   KO=60000 )
+> response time 99th percentile                      54713 (OK=52025  KO=60001 )
+> mean requests/sec                                468.455 (OK=420.104 KO=48.351)
+---- Response Time Distribution ------------------------------------------------
+> t < 800 ms                                         76144 ( 70%)
+> 800 ms <= t < 1200 ms                               9516 (  9%)
+> t >= 1200 ms                                       11384 ( 11%)
+> failed                                             11169 ( 10%)
+---- Errors --------------------------------------------------------------------
+> j.i.IOException: Premature close                                10512 (94.12%)
+> Request timeout to localhost/127.0.0.1:9999 after 60000 ms        581 ( 5.20%)
+> status.find.in(201,422,400), but actually found 502                51 ( 0.46%)
+> status.find.in([200, 209], 304), found 502                         16 ( 0.14%)
+> status.find.is(400), but actually found 502                         6 ( 0.05%)
+> status.find.in(201,422,400), but actually found 504                 3 ( 0.03%)
+================================================================================
+```
+
+It finished with almost 40K!! So this puts it near the top!!
+
+![graph 1](imgs/graphs1.png)
+
+![graph 2](imgs/graphs2.png)
+
+
+### HOW TO RUN
 
 To run this application:
 
