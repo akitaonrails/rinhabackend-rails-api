@@ -7,7 +7,7 @@ require "active_model/railtie"
 require "active_record/railtie"  # Uncomment for ActiveRecord
 # require "active_storage/engine"
 require "action_controller/railtie"
-require "action_view/railtie"
+# require "action_view/railtie"
 # require "action_mailer/railtie"  # Comment out for ActionMailer
 # require "action_mailbox/engine"  # Comment out for ActionMailbox
 # require "action_text/engine"     # Comment out for ActionText

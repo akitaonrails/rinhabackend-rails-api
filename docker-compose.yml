@@ -5,14 +5,14 @@ services:
     build: ./
     environment:
       DB_HOST: postgres
-      DB_POOL: 95
-      RAILS_MAX_THREADS: 10
+      DB_POOL: 200
+      RAILS_MAX_THREADS: 100
       WEB_CONCURRENCY: 2
       RAILS_LOG_LEVEL: warn
       REDIS_HOST: redis
-      REDIS_POOL_SIZE: 10
+      REDIS_POOL_SIZE: 400
       JOB_BATCH_SIZE: 50
-      JOB_FLUSH_TIMEOUT: 30
+      JOB_FLUSH_TIMEOUT: 60
       CACHE_EXPIRES_SECONDS: 60
       RAILS_LOG_TO_STDOUT: 'true'
     hostname: api1
@@ -26,8 +26,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.325'
-          memory: '0.5GB'
+          cpus: '0.45'
+          memory: '0.4GB'
 
   api2:
     <<: *api
@@ -39,22 +39,20 @@ services:
     environment:
       DB_HOST: postgres
       DB_POOL: 5
-      RAILS_MAX_THREADS: 1
+      RAILS_MAX_THREADS: 5
       WEB_CONCURRENCY: 1
       RAILS_LOG_LEVEL: warn
       REDIS_HOST: redis
-      REDIS_POOL_SIZE: 5
+      REDIS_POOL_SIZE: 10
       JOB_BATCH_SIZE: 5
       JOB_FLUSH_TIMEOUT: 30
       CACHE_EXPIRES_SECONDS: 60
-    command: /app/bin/bundle exec sidekiq
-    networks:
-      - mynetwork
+    command: /app/bin/bundle exec sidekiq -c 2
     deploy:
       resources:
         limits:
           cpus: '0.1'
-          memory: '0.2GB'
+          memory: '0.3GB'
 
   nginx: # Load Balancer
     image: docker.io/nginx:latest
@@ -78,7 +76,7 @@ services:
       resources:
         limits:
           cpus: '0.15'
-          memory: '0.5GB'
+          memory: '0.3GB'
 
   postgres: # Banco de dados
     image: docker.io/postgres
@@ -101,8 +99,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: '1.1GB'
+          cpus: '0.3'
+          memory: '1.5GB'
 
   redis:
     image: docker.io/redis:latest
@@ -115,8 +113,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.1'
-          memory: '0.2GB'
+          cpus: '0.05'
+          memory: '0.1GB'
 
 networks:
   mynetwork:

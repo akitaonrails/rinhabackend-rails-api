@@ -5,12 +5,16 @@ require 'mock_redis' unless Rails.env.production?
 # Redis based Queue to register params for the inserts
 # when there's enough items we can fetch_batch to perform an insert_all
 class RedisQueue
-  def initialize(conn = nil)
-    conn ||= Redis.new(uri: "redis://#{ENV.fetch('REDIS_HOST', 'localhost')}:6379/10")
+  def initialize
     @redis_pool = ConnectionPool.new(
       size: ENV.fetch('REDIS_POOL_SIZE', '5').to_i,
-      timeout: ENV.fetch('REDIS_TIMEOUT', '5').to_i) do
-      conn
+      timeout: ENV.fetch('REDIS_TIMEOUT', '5').to_i
+    ) do
+      if Rails.env.production?
+        Redis.new(uri: "redis://#{ENV.fetch('REDIS_HOST', 'localhost')}:6379/10")
+      else
+        MockRedis.new
+      end
     end
   end
 
@@ -68,4 +72,4 @@ class RedisQueue
   end
 end
 
-REDIS_QUEUE = RedisQueue.new(Rails.env.production? ? nil : MockRedis.new)
+REDIS_QUEUE = RedisQueue.new

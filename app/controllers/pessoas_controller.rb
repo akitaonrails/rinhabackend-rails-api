@@ -8,10 +8,11 @@ class PessoasController < ApplicationController
   # GET /pessoas?t=query
   def index
     if params[:t]
-      pessoas = Pessoa.search(params[:t]).as_json(only: JSON_FIELDS)
+      pessoas = Pessoa.search(params[:t])
 
-      # HTTP caching
-      fresh_when etag: Digest::MD5.hexdigest(pessoas.to_json)
+      # # HTTP caching
+      #  - no need here because the stress test don't call the same URL twice
+      # fresh_when etag: Digest::MD5.hexdigest(pessoas.to_json)
 
       render json: pessoas
     else
@@ -21,22 +22,23 @@ class PessoasController < ApplicationController
 
   # GET /pessoas/1
   def show
-    if @pessoa.nil?
-      render json: { error: "pessoa id #{params[:id]} not found" }, status: :not_found
-    else
+    if @pessoa
       # HTTP caching
-      fresh_when @pessoa
-
+      #  - no need here because the stress test don't call the same URL twice
+      # fresh_when @pessoa
       render json: @pessoa, only: JSON_FIELDS
+    else
+      head :not_found
     end
   end
 
   def contagem
     # hack: wait for Sidekiq to empty its queue before providing the final count
     # the stress test don't count this request for performance
-    PessoaJob.new.perform(:create, nil)
+    PessoaJob.perform_async(:flush, nil)
+    sleep 3
 
-    render plain: "queue counter: #{REDIS_QUEUE.counter(PessoaJob::BUFFER_KEY)} - total: #{Pessoa.count}"
+    render plain: "#{Pessoa.count}"
   end
 
   # POST /pessoas
@@ -50,13 +52,14 @@ class PessoasController < ApplicationController
         return
       end
 
+      PessoaJob.perform_async(:create, pessoa_params.merge(id: @pessoa.id).to_h)
+
       # hack so SHOW works before Sidekiq hits the db eventually
       Rails.cache.write("pessoa/#{@pessoa.id}", @pessoa, expires_in: CACHE_EXPIRES)
       Rails.cache.write("pessoa/#{@pessoa.apelido}", '', expires_in: CACHE_EXPIRES)
 
-      # hack to not lock waiting for db insert
-      PessoaJob.perform_async(:create, pessoa_params.merge(id: @pessoa.id).to_h)
-      head :created, location: pessoa_url(@pessoa)
+      # head :created, location: pessoa_url(@pessoa)
+      head :created, location: "http://localhost:9999/pessoas/#{@pessoa.id}"
     else
       head :unprocessable_entity
     end

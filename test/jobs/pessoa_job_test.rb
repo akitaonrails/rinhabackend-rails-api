@@ -38,4 +38,15 @@ class PessoaJobTest < ActiveSupport::TestCase
     end
     assert_equal 0, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
   end
+
+  test 'should clean remaining buffer' do
+    PessoaJob.new.perform(:create, @generator.call(1))
+    PessoaJob.new.perform(:create, @generator.call(2))
+    assert_equal 2, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
+
+    Pessoa.stub(:insert_all, nil) do
+      PessoaJob.new.perform(:flush, nil)
+    end
+    assert_equal 0, REDIS_QUEUE.size(PessoaJob::BUFFER_KEY)
+  end
 end

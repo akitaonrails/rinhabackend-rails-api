@@ -1,4 +1,5 @@
 Sidekiq.configure_server do |config|
+  config.logger = nil
   config.redis = { url: "redis://#{ENV['REDIS_HOST'] || "localhost"}:6379/0"}
 end
 
