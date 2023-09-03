@@ -1,17 +1,18 @@
 source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby "3.2.2"
+ruby "3.3.0.preview1"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 7.0.7", ">= 7.0.7.2"
+# gem "rails", "~> 7.0.7", ">= 7.0.7.2"
+gem "rails", github: "rails/rails", ref: "5cf742ef514b2184eb3d617e558c77f1bd6ceb11"
 
 # Use sqlite3 as the database for Active Record
 # gem "sqlite3", "~> 1.4"
 gem "pg"
 
 # Use the Puma web server [https://github.com/puma/puma]
-gem "puma", "~> 5.0"
+gem "puma", "~> 6.0"
 
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 # gem "jbuilder"

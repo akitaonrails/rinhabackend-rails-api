@@ -1,36 +1,60 @@
-# Use an official Ruby runtime as a parent image
-FROM docker.io/ruby:3.2
+# syntax = docker/dockerfile:1
 
-# Set the working directory in the container to /app
-WORKDIR /app
+# Make sure RUBY_VERSION matches the Ruby version in .ruby-version and Gemfile
+ARG RUBY_VERSION=3.3.0-preview1
+FROM registry.docker.com/library/ruby:$RUBY_VERSION-slim as base
 
-# Set environment variables
-ENV RAILS_ENV=production
-ENV RAILS_LOG_TO_STDOUT=false
-ENV RAILS_SERVE_STATIC_FILES=false
+# Rails app lives here
+WORKDIR /rails
 
-# Install nodejs and yarn
-RUN apt-get update -qq #&& apt-get install -y nodejs npm && npm install -g yarn
+# Set production environment
+ENV RAILS_ENV="production" \
+    BUNDLE_DEPLOYMENT="1" \
+    BUNDLE_PATH="/usr/local/bundle" \
+    BUNDLE_WITHOUT="development"
 
-# Install PostgreSQL client
-RUN apt-get install -y postgresql-client
 
-# Copy Gemfile and Gemfile.lock for bundle install
-COPY Gemfile* ./
+# Throw-away build stage to reduce size of final image
+FROM base as build
 
-# Install gems
-RUN gem install bundler
-RUN bundle config set --local without 'development test'
-RUN bundle install --jobs 4 --retry 3
+# Install packages needed to build gems
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y build-essential git libpq-dev libvips pkg-config
 
-# Copy the current directory contents into the container at /app
+# Install application gems
+COPY Gemfile Gemfile.lock ./
+RUN bundle install && \
+    rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
+    bundle exec bootsnap precompile --gemfile
+
+
+# Copy application code
 COPY . .
 
-# Precompile Rails assets
-#RUN bin/rails assets:precompile
+# Precompile bootsnap code for faster boot times
+RUN bundle exec bootsnap precompile app/ lib/
 
-# Expose port 3000 to the Docker host, so you can access it from the outside.
+
+# Final stage for app image
+FROM base
+
+# Install packages needed for deployment
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y curl libvips postgresql-client netcat-traditional && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Copy built artifacts: gems, application
+COPY --from=build /usr/local/bundle /usr/local/bundle
+COPY --from=build /rails /rails
+
+# Run and own only the runtime files as a non-root user for security
+# RUN useradd rails --create-home --shell /bin/bash && \
+#     chown -R rails:rails db log storage tmp && \
+# USER rails:rails
+
+# Entrypoint prepares the database.
+# ENTRYPOINT ["/rails/bin/docker-entrypoint"]
+
+# Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
-
-# Start the main process
-CMD ["sh", "./entrypoint.sh"]
+CMD ["sh", "/rails/entrypoint.sh"]
