@@ -16,27 +16,6 @@ This version is OVERENGINEERED. I already missed the deadline anyway, so I went 
 
 [@lazaronixon](https://github.com/lazaronixon/rinha_de_backend/) did a much simpler and straight forward version that already maxes out the stress test insertion criteria. But this is for fun.
 
-I did had a discovery: I spent hours testing this thinking that my version had some bug that was keeping it down, below 20k even. But turns out that this line in docker-compose.yml is not working properly and I have no idea why:
-
-    volumes:
-      - ./postgresql.conf:/docker-entrypoint-initdb.d/postgresql.conf
-
-In this config I had set a high max_connections, but the container was actually loading with just the default 100. That was the problem. You can check the database by connecting to it directly after loading docker compose up:
-
-    ❯ docker-compose exec postgres psql -U postgres
-        psql (15.4 (Debian 15.4-1.pgdg120+1))
-        Type "help" for help.
-
-        postgres=# SHOW max_connections;
-        max_connections
-        -----------------
-        100
-        (1 row)
-
-To make sure it's actually increasing the max connections, I had to do:
-
-    command: postgres -c 'max_connections=450'
-
 ### RESULTS
 
 ```
