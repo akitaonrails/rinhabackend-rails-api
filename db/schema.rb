@@ -24,7 +24,6 @@ ActiveRecord::Schema[7.0].define(version: 2023_08_27_015102) do
     t.datetime "updated_at", null: false
     t.virtual "searchable", type: :text, as: "(((((nome)::text || ' '::text) || (apelido)::text) || ' '::text) || (COALESCE(stack, ' '::character varying))::text)", stored: true
     t.index ["apelido"], name: "index_pessoas_on_apelido", unique: true
-    t.index ["nome"], name: "index_pessoas_on_nome", unique: true
     t.index ["searchable"], name: "index_pessoas_on_searchable", opclass: :gist_trgm_ops, using: :gist
   end
 

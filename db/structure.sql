@@ -96,13 +96,6 @@ CREATE UNIQUE INDEX index_pessoas_on_apelido ON public.pessoas USING btree (apel
 
 
 --
--- Name: index_pessoas_on_nome; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_pessoas_on_nome ON public.pessoas USING btree (nome);
-
-
---
 -- Name: index_pessoas_on_searchable; Type: INDEX; Schema: public; Owner: -
 --
 

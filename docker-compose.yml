@@ -4,15 +4,16 @@ services:
     #image: docker.io/akitaonrails/rinhabackendapi:latest
     build: ./
     environment:
-      DB_HOST: postgres
+      PORT: 3000
+      DB_HOST: localhost
       DB_POOL: 200
-      RAILS_MAX_THREADS: 100
+      RAILS_MAX_THREADS: 95
       WEB_CONCURRENCY: 2
       RAILS_LOG_LEVEL: warn
       RAILS_ENV: production
-      REDIS_HOST: redis
-      REDIS_POOL_SIZE: 20
-      JOB_BATCH_SIZE: 10
+      REDIS_HOST: localhost
+      REDIS_POOL_SIZE: 50
+      JOB_BATCH_SIZE: 40
       CACHE_EXPIRES_SECONDS: 60
       RAILS_LOG_TO_STDOUT: 'true'
       RUBY_YJIT_ENABLE: 1
@@ -21,33 +22,45 @@ services:
     depends_on:
       - postgres
       - redis
-    expose:
-      - "3000"
-    networks:
-      - mynetwork
+    network_mode: host
     deploy:
       resources:
         limits:
           cpus: '0.45'
-          memory: '0.4GB'
+          memory: '0.5GB'
 
   api2:
     <<: *api
     hostname: api2
+    environment:
+      PORT: 3001
+      DB_HOST: localhost
+      DB_POOL: 200
+      RAILS_MAX_THREADS: 95
+      WEB_CONCURRENCY: 2
+      RAILS_LOG_LEVEL: warn
+      RAILS_ENV: production
+      REDIS_HOST: localhost
+      REDIS_POOL_SIZE: 50
+      JOB_BATCH_SIZE: 40
+      CACHE_EXPIRES_SECONDS: 60
+      RAILS_LOG_TO_STDOUT: 'true'
+      RUBY_YJIT_ENABLE: 1
+      RAILS_MASTER_KEY: 84ec93b5f81d27f8fdf7fc71d7b28e15
 
   sidekiq1: &sidekiq
     <<: *api
     hostname: sidekiq
     environment:
-      DB_HOST: postgres
-      DB_POOL: 1
+      DB_HOST: localhost
+      DB_POOL: 3
       RAILS_MAX_THREADS: 1
       WEB_CONCURRENCY: 1
       RAILS_LOG_LEVEL: warn
       RAILS_ENV: production
-      REDIS_HOST: redis
+      REDIS_HOST: localhost
       REDIS_POOL_SIZE: 1
-      JOB_BATCH_SIZE: 10
+      JOB_BATCH_SIZE: 40
       JOB_FLUSH_TIMEOUT: 30
       CACHE_EXPIRES_SECONDS: 60
       RAILS_LOG_TO_STDOUT: 'true'
@@ -72,19 +85,16 @@ services:
     depends_on:
       - api1
       - api2
-    ports:
-      - "9999:9999"
     ulimits:
       nproc: 1000000
       nofile:
         soft: 1000000
         hard: 1000000
-    networks:
-      - mynetwork
+    network_mode: host
     deploy:
       resources:
         limits:
-          cpus: '0.1'
+          cpus: '0.15'
           memory: '0.3GB'
 
   postgres: # Banco de dados
@@ -94,8 +104,6 @@ services:
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: password
     command: postgres -c 'max_connections=450'
-    expose:
-      - "5432"
     volumes:
       - ./postgresql.conf:/docker-entrypoint-initdb.d/postgresql.conf
     healthcheck:
@@ -104,28 +112,20 @@ services:
       timeout: 5s
       retries: 20
       start_period: 10s
-    networks:
-      - mynetwork
+    network_mode: host
     deploy:
       resources:
         limits:
-          cpus: '0.35'
-          memory: '1.5GB'
+          cpus: '0.30'
+          memory: '1.3GB'
 
   redis:
     image: docker.io/redis:latest
     hostname: redis
     command: redis-server --save "" --appendonly no --maxclients 20000
-    expose:
-      - "6379"
-    networks:
-      - mynetwork
+    network_mode: host
     deploy:
       resources:
         limits:
           cpus: '0.05'
           memory: '0.1GB'
-
-networks:
-  mynetwork:
-    driver: bridge
