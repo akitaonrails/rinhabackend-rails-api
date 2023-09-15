@@ -1,7 +1,7 @@
 #!/bin/sh
 cd /rails
-sleep 2 # just to make sure postgres is up
+sleep 5 # just to make sure postgres is up
 echo "run db:reset"
-DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bin/rails db:reset
+DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bin/rails db:reset db:create db:migrate
 echo "run Puma"
 bin/bundle exec puma -C config/puma.rb

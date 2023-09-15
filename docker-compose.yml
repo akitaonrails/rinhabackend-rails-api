@@ -6,14 +6,14 @@ services:
     environment:
       PORT: 3000
       DB_HOST: localhost
-      DB_POOL: 200
-      RAILS_MAX_THREADS: 95
+      DB_POOL: 80
+      RAILS_MAX_THREADS: 40
       WEB_CONCURRENCY: 2
       RAILS_LOG_LEVEL: warn
       RAILS_ENV: production
       REDIS_HOST: localhost
       REDIS_POOL_SIZE: 50
-      JOB_BATCH_SIZE: 40
+      JOB_BATCH_SIZE: 100
       CACHE_EXPIRES_SECONDS: 60
       RAILS_LOG_TO_STDOUT: 'true'
       RUBY_YJIT_ENABLE: 1
@@ -35,14 +35,14 @@ services:
     environment:
       PORT: 3001
       DB_HOST: localhost
-      DB_POOL: 200
-      RAILS_MAX_THREADS: 95
+      DB_POOL: 80
+      RAILS_MAX_THREADS: 40
       WEB_CONCURRENCY: 2
       RAILS_LOG_LEVEL: warn
       RAILS_ENV: production
       REDIS_HOST: localhost
       REDIS_POOL_SIZE: 50
-      JOB_BATCH_SIZE: 40
+      JOB_BATCH_SIZE: 100
       CACHE_EXPIRES_SECONDS: 60
       RAILS_LOG_TO_STDOUT: 'true'
       RUBY_YJIT_ENABLE: 1
@@ -116,7 +116,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.30'
+          cpus: '0.35'
           memory: '1.3GB'
 
   redis:
